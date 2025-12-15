@@ -352,6 +352,20 @@ async def mine(message: types.Message):
     else:
         levelup_text = ""
     save_user_to_db(user_id, user)
+    # Update clan contribution
+    cursor.execute("SELECT clan_id FROM users WHERE user_id = ?", (user_id,))
+    clan_row = cursor.fetchone()
+    if clan_row and clan_row[0]:
+        cursor.execute("UPDATE users SET clan_contribution = clan_contribution + ? WHERE user_id = ?", (gained, user_id))
+        cursor.execute("UPDATE clans SET total_protein = total_protein + ? WHERE id = ?", (gained, clan_row[0]))
+        conn.commit()
+    # Update clan contribution
+    cursor.execute("SELECT clan_id FROM users WHERE user_id = ?", (user_id,))
+    clan_row = cursor.fetchone()
+    if clan_row and clan_row[0]:
+        cursor.execute("UPDATE users SET clan_contribution = clan_contribution + ? WHERE user_id = ?", (gained, user_id))
+        cursor.execute("UPDATE clans SET total_protein = total_protein + ? WHERE id = ?", (gained, clan_row[0]))
+        conn.commit()
     if rarity == "LEGENDARY":
         msg = f"{'='*30}\n💎💎💎 LEGENDARY PROTEIN! 💎💎💎\n{'='*30}\n+{gained} PROTEIN (x{multiplier})\n🎉 THIS IS ULTRA RARE! 🎉\n"
     elif rarity == "EPIC":
@@ -430,6 +444,132 @@ async def cmd_top_drops(message: types.Message):
             name = f"User {uid}"
         text.append(f"{i}. <b>{name}</b> — {drops_count} rare drops")
     await message.answer("\n".join(text), parse_mode="HTML")
+
+
+# ============================
+# CLAN SYSTEM
+# ============================
+
+@dp.message_handler(commands=["clan"])
+async def cmd_clan(message: types.Message):
+    user_id = message.from_user.id
+    
+    cursor.execute("SELECT clan_id, clan_contribution FROM users WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    
+    if row and row[0]:
+        clan_id = row[0]
+        contribution = row[1]
+        
+        cursor.execute("SELECT name, total_protein, members_count FROM clans WHERE id = ?", (clan_id,))
+        clan = cursor.fetchone()
+        
+        if clan:
+            text = (
+                f"🏰 <b>Your Clan: {clan[0]}</b>\n\n"
+                f"🧬 Total Protein: <b>{clan[1]}</b>\n"
+                f"👥 Members: <b>{clan[2]}</b>\n"
+                f"🎯 Your Contribution: <b>{contribution}</b>\n\n"
+                "Use /clan_top to see clan leaderboard!"
+            )
+            await message.answer(text, parse_mode="HTML")
+    else:
+        from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+        
+        keyboard = InlineKeyboardMarkup(row_width=2)
+        keyboard.add(
+            InlineKeyboardButton("🏛️ Ankara", callback_data="clan:1"),
+            InlineKeyboardButton("🌉 Istanbul", callback_data="clan:2")
+        )
+        keyboard.add(
+            InlineKeyboardButton("🏖️ Izmir", callback_data="clan:3"),
+            InlineKeyboardButton("🏔️ Antalya", callback_data="clan:4")
+        )
+        keyboard.add(
+            InlineKeyboardButton("🏙️ Bursa", callback_data="clan:5")
+        )
+        
+        await message.answer(
+            "🏰 <b>Choose Your Clan!</b>\n\n"
+            "Join one of the Turkish clans and compete for glory!\n"
+            "Your mining will contribute to your clan's total.",
+            reply_markup=keyboard,
+            parse_mode="HTML"
+        )
+
+
+@dp.callback_query_handler(lambda c: c.data and c.data.startswith('clan:'))
+async def process_clan_choice(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+    clan_id = int(callback_query.data.split(':')[1])
+    
+    cursor.execute("SELECT clan_id FROM users WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    
+    if row and row[0]:
+        await callback_query.answer("You already have a clan!", show_alert=True)
+        return
+    
+    cursor.execute("UPDATE users SET clan_id = ? WHERE user_id = ?", (clan_id, user_id))
+    cursor.execute("UPDATE clans SET members_count = members_count + 1 WHERE id = ?", (clan_id,))
+    conn.commit()
+    
+    cursor.execute("SELECT name FROM clans WHERE id = ?", (clan_id,))
+    clan_name = cursor.fetchone()[0]
+    
+    await callback_query.message.edit_text(
+        f"🎉 Welcome to <b>{clan_name}</b>!\n\n"
+        "Your mining now contributes to your clan.\n"
+        "Use /clan to see clan info!",
+        parse_mode="HTML"
+    )
+    await callback_query.answer()
+
+
+@dp.message_handler(commands=["clan_top", "clans"])
+async def cmd_clan_top(message: types.Message):
+    cursor.execute("""
+        SELECT name, total_protein, members_count 
+        FROM clans 
+        ORDER BY total_protein DESC 
+        LIMIT 10
+    """)
+    rows = cursor.fetchall()
+    
+    if not rows:
+        await message.answer("No clans yet.")
+        return
+    
+    text = ["🏆 <b>CLAN LEADERBOARD</b>\n"]
+    
+    medals = ["🥇", "🥈", "🥉"]
+    for i, (name, protein, members) in enumerate(rows, start=1):
+        medal = medals[i-1] if i <= 3 else f"{i}."
+        text.append(f"{medal} <b>{name}</b>")
+        text.append(f"   🧬 {protein:,} protein | 👥 {members} members\n")
+    
+    await message.answer("\n".join(text), parse_mode="HTML")
+
+
+@dp.message_handler(commands=["clan_leave"])
+async def cmd_clan_leave(message: types.Message):
+    user_id = message.from_user.id
+    
+    cursor.execute("SELECT clan_id FROM users WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    
+    if not row or not row[0]:
+        await message.answer("You're not in any clan!")
+        return
+    
+    clan_id = row[0]
+    
+    cursor.execute("UPDATE users SET clan_id = NULL, clan_contribution = 0 WHERE user_id = ?", (user_id,))
+    cursor.execute("UPDATE clans SET members_count = members_count - 1 WHERE id = ?", (clan_id,))
+    conn.commit()
+    
+    await message.answer("You left your clan. Use /clan to join a new one!")
+
 
 if __name__ == "__main__":
     print("ProteinMine bot is running with REFERRAL system...")
