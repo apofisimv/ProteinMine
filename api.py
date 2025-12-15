@@ -158,5 +158,77 @@ def get_clans():
     
     return jsonify(clans)
 
+
+@app.route('/api/leaderboard/global', methods=['GET'])
+def get_global_leaderboard():
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT user_id, protein, level, xp 
+        FROM users 
+        ORDER BY protein DESC 
+        LIMIT 50
+    """)
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    leaderboard = []
+    for row in rows:
+        leaderboard.append({
+            "user_id": row[0],
+            "protein": row[1],
+            "level": row[2],
+            "xp": row[3]
+        })
+    
+    return jsonify(leaderboard)
+
+@app.route('/api/leaderboard/friends/<int:user_id>', methods=['GET'])
+def get_friends_leaderboard(user_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT u.user_id, u.protein, u.level, u.xp
+        FROM friendships f
+        JOIN users u ON (f.friend_id = u.user_id)
+        WHERE f.user_id = ?
+        ORDER BY u.protein DESC
+        LIMIT 20
+    """, (user_id,))
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    friends = []
+    for row in rows:
+        friends.append({
+            "user_id": row[0],
+            "protein": row[1],
+            "level": row[2],
+            "xp": row[3]
+        })
+    
+    return jsonify(friends)
+
+@app.route('/api/user/position/<int:user_id>', methods=['GET'])
+def get_user_position(user_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT COUNT(*) + 1
+        FROM users
+        WHERE protein > (SELECT protein FROM users WHERE user_id = ?)
+    """, (user_id,))
+    
+    position = cursor.fetchone()[0]
+    conn.close()
+    
+    return jsonify({"position": position})
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
