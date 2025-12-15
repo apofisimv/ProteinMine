@@ -45,7 +45,6 @@ def mine(user_id):
     conn = get_db()
     cursor = conn.cursor()
     
-    # Получаем пользователя
     cursor.execute("""
         SELECT protein, energy, xp, level 
         FROM users 
@@ -63,44 +62,39 @@ def mine(user_id):
         conn.close()
         return jsonify({"error": "No energy"}), 400
     
-    # Определяем редкость
     import random
     roll = random.random()
     
-    if roll < 0.001:  # LEGENDARY
+    if roll < 0.001:
         rarity = "LEGENDARY"
         multiplier = 100
         emoji = "💎"
-    elif roll < 0.01:  # EPIC
+    elif roll < 0.01:
         rarity = "EPIC"
         multiplier = 20
         emoji = "🔮"
-    elif roll < 0.10:  # RARE
+    elif roll < 0.10:
         rarity = "RARE"
         multiplier = 5
         emoji = "⭐"
-    else:  # COMMON
+    else:
         rarity = "COMMON"
         multiplier = 1
         emoji = "🧬"
     
-    # Считаем награду
     base_gain = random.randint(1, 5)
     gained = base_gain * multiplier
     
-    # Обновляем данные
     energy -= 1
     protein += gained
     xp += gained
     
-    # Level up
     levelup = False
     if xp >= level * 100:
         level += 1
         xp = 0
         levelup = True
     
-    # Сохраняем в базу
     cursor.execute("""
         UPDATE users 
         SET protein = ?, energy = ?, xp = ?, level = ?
@@ -109,18 +103,11 @@ def mine(user_id):
     
     conn.commit()
     
-    # ============================
-    # CLAN CONTRIBUTION UPDATE
-    # ============================
-    print(f"[CLAN DEBUG] Mining: user={user_id}, gained={gained}")
-    
     cursor.execute("SELECT clan_id FROM users WHERE user_id = ?", (user_id,))
     clan_row = cursor.fetchone()
     
     if clan_row and clan_row[0]:
         clan_id = clan_row[0]
-        print(f"[CLAN DEBUG] User in clan {clan_id}, updating contribution")
-        
         cursor.execute(
             "UPDATE users SET clan_contribution = clan_contribution + ? WHERE user_id = ?",
             (gained, user_id)
@@ -130,9 +117,6 @@ def mine(user_id):
             (gained, clan_id)
         )
         conn.commit()
-        print(f"[CLAN DEBUG] Clan contribution updated!")
-    else:
-        print(f"[CLAN DEBUG] User not in any clan")
     
     conn.close()
     
@@ -148,6 +132,31 @@ def mine(user_id):
         "level": level,
         "levelup": levelup
     })
+
+@app.route('/api/clans', methods=['GET'])
+def get_clans():
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, name, total_protein, members_count 
+        FROM clans 
+        ORDER BY total_protein DESC
+    """)
+    
+    rows = cursor.fetchall()
+    conn.close()
+    
+    clans = []
+    for row in rows:
+        clans.append({
+            "id": row[0],
+            "name": row[1],
+            "total_protein": row[2],
+            "members_count": row[3]
+        })
+    
+    return jsonify(clans)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
