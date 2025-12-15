@@ -1,0 +1,21 @@
+[0;1;32m●[0m supervisor.service - Supervisor process control system for UNIX
+     Loaded: loaded (]8;;file://ubuntu-4gb-hel1-3/usr/lib/systemd/system/supervisor.service/usr/lib/systemd/system/supervisor.service]8;;; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: [0;1;32mactive (running)[0m since Wed 2025-12-10 09:22:29 UTC; 1 day 3h ago
+       Docs: ]8;;http://supervisord.orghttp://supervisord.org]8;;
+   Main PID: 14742 (supervisord)
+      Tasks: 1 (limit: 4538)
+     Memory: 19.2M (peak: 45.4M)
+        CPU: 44.513s
+     CGroup: /system.slice/supervisor.service
+             └─[0;38;5;245m14742 /usr/bin/python3 /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf[0m
+
+Dec 11 11:57:35 ubuntu-4gb-hel1-3 supervisord[14742]: 2025-12-11 11:57:35,233 INFO waiting for proteinmine to stop
+Dec 11 11:57:35 ubuntu-4gb-hel1-3 supervisord[14742]: 2025-12-11 11:57:35,239 WARN stopped: proteinmine (terminated by SIGTERM)
+Dec 11 12:00:13 ubuntu-4gb-hel1-3 supervisord[14742]: 2025-12-11 12:00:13,158 INFO spawned: 'proteinmine' with pid 33309
+Dec 11 12:00:14 ubuntu-4gb-hel1-3 supervisord[14742]: 2025-12-11 12:00:14,161 INFO success: proteinmine entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+Dec 11 12:06:08 ubuntu-4gb-hel1-3 supervisord[14742]: 2025-12-11 12:06:08,813 INFO waiting for proteinmine to stop
+Dec 11 12:06:08 ubuntu-4gb-hel1-3 supervisord[14742]: 2025-12-11 12:06:08,819 WARN stopped: proteinmine (terminated by SIGTERM)
+Dec 11 12:06:08 ubuntu-4gb-hel1-3 supervisord[14742]: 2025-12-11 12:06:08,825 INFO spawned: 'proteinmine' with pid 33360
+Dec 11 12:06:09 ubuntu-4gb-hel1-3 supervisord[14742]: 2025-12-11 12:06:09,828 INFO success: proteinmine entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+Dec 11 12:09:22 ubuntu-4gb-hel1-3 supervisord[14742]: 2025-12-11 12:09:22,320 INFO waiting for proteinmine to stop
+Dec 11 12:09:22 ubuntu-4gb-hel1-3 supervisord[14742]: 2025-12-11 12:09:22,337 WARN stopped: proteinmine (terminated by SIGTERM)
