@@ -244,7 +244,7 @@ async def cmd_start(message: types.Message):
     get_user(user_id)
     from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
     webapp = InlineKeyboardMarkup(row_width=1)
-    webapp.add(InlineKeyboardButton("🎮 PLAY GAME", web_app=WebAppInfo(url="https://unresilient-autonomically-julia.ngrok-free.dev")))
+    webapp.add(InlineKeyboardButton("🎮 PLAY GAME", web_app=WebAppInfo(url="https://unresilient-autonomically-julia.ngrok-free.dev?v=2")))
     await message.answer("🧬 <b>ProteinMine!</b>\n\n🎮 Tap button to play!", reply_markup=webapp, parse_mode="HTML")
     await message.answer("Or use buttons below:", reply_markup=keyboard, parse_mode="HTML")
 
