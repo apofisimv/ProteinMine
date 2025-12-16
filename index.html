@@ -7,28 +7,73 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://code.highcharts.com/maps/highmaps.js"></script>
+<script src="https://code.highcharts.com/maps/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/mapdata/countries/tr/tr-all.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,sans-serif;background:linear-gradient(-45deg,#0a0e27,#1a1a3e,#302b63);background-size:400% 400%;animation:g 15s ease infinite;height:100vh;color:#fff;overflow-x:hidden}
-@keyframes g{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}
-.c{text-align:center;padding:20px;width:100%;max-width:400px;margin:0 auto}
-h1{font-size:28px;background:linear-gradient(90deg,#0ff,#f0f);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:15px}
-.tabs{display:flex;gap:10px;margin-bottom:20px}
-.tab{flex:1;padding:12px;background:rgba(10,10,30,.6);border:2px solid rgba(0,255,255,.3);border-radius:10px;color:#0ff;cursor:pointer;font-size:16px;font-weight:bold}
-.tab.active{background:rgba(0,255,255,.2);border-color:#0ff}
-.page{display:none}
+body{font-family:-apple-system,sans-serif;background:linear-gradient(-45deg,#0a0e27,#1a1a3e,#302b63,#24243e);background-size:400% 400%;animation:gradientBG 15s ease infinite;min-height:100vh;color:#fff;overflow-x:hidden}
+@keyframes gradientBG{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
+.c{text-align:center;padding:20px;width:100%;max-width:400px;margin:0 auto;padding-bottom:80px}
+h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shine 3s linear infinite;margin-bottom:15px;text-shadow:0 0 20px rgba(0,255,255,0.5)}
+@keyframes shine{to{background-position:200% center}}
+.tabs{display:flex;gap:5px;margin-bottom:20px;overflow-x:auto}
+.tab{flex:1;min-width:80px;padding:12px 8px;background:rgba(10,10,30,.6);border:2px solid rgba(0,255,255,.3);border-radius:12px;color:#0ff;cursor:pointer;font-size:14px;font-weight:bold;transition:all 0.3s;position:relative;overflow:hidden}
+.tab::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(0,255,255,0.3),transparent);transition:0.5s}
+.tab:hover::before{left:100%}
+.tab.active{background:linear-gradient(135deg,rgba(0,255,255,.3),rgba(255,0,255,.3));border-color:#0ff;transform:translateY(-2px);box-shadow:0 5px 15px rgba(0,255,255,0.4)}
+.page{display:none;animation:fadeIn 0.5s}
 .page.active{display:block}
-.s{background:rgba(10,10,30,.6);backdrop-filter:blur(20px);border-radius:20px;padding:25px;margin:20px 0;border:2px solid rgba(0,255,255,.3)}
-.p{font-size:56px;background:linear-gradient(135deg,#0ff,#ff0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:15px 0;font-weight:bold}
-.i{font-size:18px;margin:10px 0;opacity:0.9}
-.i span{color:#0ff}
-.e{width:100%;height:20px;background:rgba(0,255,255,0.2);border-radius:10px;overflow:hidden;margin-top:15px}
-.eb{height:100%;background:linear-gradient(90deg,#0ff,#00ff88);transition:width 0.3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.s{background:linear-gradient(135deg,rgba(10,10,40,.8),rgba(30,10,40,.8));backdrop-filter:blur(20px);border-radius:20px;padding:25px;margin:20px 0;border:2px solid rgba(0,255,255,.3);box-shadow:0 8px 32px rgba(0,255,255,0.1);position:relative;overflow:hidden;transition:all 0.3s}
+.s::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(0,255,255,0.1),transparent);animation:rotate 20s linear infinite;pointer-events:none}
+@keyframes rotate{to{transform:rotate(360deg)}}
+.s:hover{transform:translateY(-5px);box-shadow:0 12px 40px rgba(0,255,255,0.2)}
+.p{font-size:64px;background:linear-gradient(135deg,#0ff,#ff0,#0ff);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shine 2s linear infinite;margin:15px 0;font-weight:bold;text-shadow:0 0 30px rgba(0,255,255,0.5);transition:all 0.3s}
+.p.grow{animation:grow 0.5s ease}
+@keyframes grow{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.i{font-size:18px;margin:12px 0;opacity:0.9;transition:all 0.3s}
+.i:hover{opacity:1;transform:translateX(5px)}
+.i span{color:#0ff;font-weight:bold}
+.e{width:100%;height:24px;background:rgba(0,255,255,0.2);border-radius:12px;overflow:hidden;margin-top:15px;box-shadow:inset 0 2px 10px rgba(0,0,0,0.5)}
+.eb{height:100%;background:linear-gradient(90deg,#0ff,#00ff88,#0ff);background-size:200% auto;animation:shine 2s linear infinite;transition:width 0.5s ease;box-shadow:0 0 20px rgba(0,255,255,0.6)}
 .et{margin-top:8px;font-size:16px;color:#0ff;font-weight:bold}
-.b{width:180px;height:180px;border-radius:50%;background:linear-gradient(135deg,#0ff,#f0f);color:#fff;font-size:32px;font-weight:bold;border:none;cursor:pointer;margin:30px auto;display:block;box-shadow:0 0 30px rgba(0,255,255,0.5);transition:transform 0.1s;-webkit-tap-highlight-color:transparent}
-.b:active{transform:scale(0.95)}
-#map{height:400px;border-radius:15px;margin:20px 0;border:2px solid rgba(0,255,255,.3)}
+.b{width:200px;height:200px;border-radius:50%;background:linear-gradient(135deg,#0ff,#f0f,#ff0);color:#fff;font-size:36px;font-weight:bold;border:none;cursor:pointer;margin:30px auto;display:block;box-shadow:0 0 40px rgba(0,255,255,0.6),0 0 80px rgba(255,0,255,0.4);transition:all 0.3s;-webkit-tap-highlight-color:transparent;animation:pulse 2s ease infinite;position:relative}
+@keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 0 40px rgba(0,255,255,0.6),0 0 80px rgba(255,0,255,0.4)}50%{transform:scale(1.05);box-shadow:0 0 60px rgba(0,255,255,0.8),0 0 100px rgba(255,0,255,0.6)}}
+.b:active{transform:scale(0.95);animation:none}
+.b:disabled{opacity:0.5;cursor:not-allowed;animation:none}
+.b::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;background:rgba(255,255,255,0.5);transform:translate(-50%,-50%);pointer-events:none}
+.b.clicked::after{animation:ripple 0.6s ease-out}
+@keyframes ripple{to{width:300px;height:300px;opacity:0}}
+#map,#turkeyMapStatic{height:400px;border-radius:15px;margin:20px 0;border:2px solid rgba(0,255,255,.3);box-shadow:0 8px 32px rgba(0,255,255,0.2)}
 .map-info{background:rgba(10,10,30,.8);padding:15px;border-radius:10px;margin-top:10px;font-size:14px}
+.drop-msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:rgba(0,0,0,0.95);padding:40px;border-radius:25px;border:4px solid;font-size:28px;font-weight:bold;text-align:center;z-index:1000;animation:dropPop 0.6s ease forwards;box-shadow:0 0 60px rgba(0,255,255,0.8)}
+@keyframes dropPop{0%{transform:translate(-50%,-50%) scale(0) rotate(0deg);opacity:0}50%{transform:translate(-50%,-50%) scale(1.2) rotate(5deg)}100%{transform:translate(-50%,-50%) scale(1) rotate(0deg);opacity:1}}
+.drop-msg.legendary{animation:legendaryPop 1s ease forwards;border-color:#9b59b6}
+@keyframes legendaryPop{0%,100%{transform:translate(-50%,-50%) scale(1) rotate(0deg)}10%,30%,50%,70%,90%{transform:translate(-50%,-50%) scale(1.1) rotate(5deg)}20%,40%,60%,80%{transform:translate(-50%,-50%) scale(1.1) rotate(-5deg)}}
+.particle{position:fixed;pointer-events:none;font-size:24px;animation:particleFloat 2s ease-out forwards;z-index:999}
+@keyframes particleFloat{to{transform:translateY(-200px);opacity:0}}
+.clan-popup{font-size:14px;line-height:1.6}
+.clan-popup h3{color:#0ff;margin-bottom:8px}
+.lb-item{display:flex;align-items:center;padding:15px;margin:10px 0;background:linear-gradient(135deg,rgba(0,255,255,0.1),rgba(255,0,255,0.1));border-radius:12px;border-left:4px solid #0ff;transition:all 0.3s;animation:slideIn 0.5s ease forwards;opacity:0}
+.lb-item:hover{transform:translateX(5px);box-shadow:0 5px 20px rgba(0,255,255,0.3)}
+@keyframes slideIn{to{opacity:1}}
+.lb-item:nth-child(1){animation-delay:0.1s}
+.lb-item:nth-child(2){animation-delay:0.2s}
+.lb-item:nth-child(3){animation-delay:0.3s}
+.lb-item:nth-child(4){animation-delay:0.4s}
+.lb-item:nth-child(5){animation-delay:0.5s}
+.lb-item.me{background:linear-gradient(135deg,rgba(255,0,255,0.3),rgba(255,0,100,0.2));border-left-color:#f0f;box-shadow:0 0 20px rgba(255,0,255,0.4)}
+.lb-pos{font-size:24px;font-weight:bold;min-width:50px;color:#0ff}
+.lb-info{flex:1;margin-left:15px}
+.lb-name{font-size:18px;font-weight:bold}
+.lb-stats{font-size:13px;opacity:0.8;margin-top:5px}
+.lb-protein{font-size:20px;font-weight:bold;background:linear-gradient(135deg,#ff0,#0ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.lb-tabs{display:flex;gap:10px;margin-bottom:15px}
+.lb-tab{flex:1;padding:12px;background:rgba(10,10,30,.6);border:2px solid rgba(0,255,255,.3);border-radius:10px;color:#0ff;cursor:pointer;font-size:14px;text-align:center;transition:all 0.3s}
+.lb-tab:hover{transform:translateY(-2px)}
+.lb-tab.active{background:linear-gradient(135deg,rgba(0,255,255,.2),rgba(255,0,255,.2));border-color:#0ff;box-shadow:0 5px 15px rgba(0,255,255,0.4)}
+.my-position{background:linear-gradient(135deg,rgba(255,0,255,0.3),rgba(255,0,100,0.2));padding:20px;border-radius:15px;margin-bottom:20px;text-align:center;border:2px solid rgba(255,0,255,0.5);box-shadow:0 8px 32px rgba(255,0,255,0.3)}
 </style>
 </head>
 <body>
@@ -37,7 +82,9 @@ h1{font-size:28px;background:linear-gradient(90deg,#0ff,#f0f);-webkit-background
 
 <div class="tabs">
 <div class="tab active" onclick="showPage('mine')">⛏️ Mine</div>
-<div class="tab" onclick="showPage('map')">🗺️ Map</div>
+<div class="tab" onclick="showPage('leaderboard')">🏆 Top</div>
+<div class="tab" onclick="showPage('map')">🗺️ Clans</div>
+<div class="tab" onclick="showPage('stats')">📊 Stats</div>
 </div>
 
 <div id="minePage" class="page active">
@@ -48,18 +95,52 @@ h1{font-size:28px;background:linear-gradient(90deg,#0ff,#f0f);-webkit-background
 <div class="i">📊 <span id="xp">XP: 0/100</span></div>
 <div class="i">⚡ <span>ENERGY</span></div>
 <div class="e"><div class="eb" id="eb"></div></div>
-<div class="et" id="et">50/50</div>
+<div class="et" id="et">0/50</div>
 </div>
 <button class="b" id="btn">⛏️ MINE</button>
 </div>
 
+<div id="leaderboardPage" class="page">
+<div class="s">
+<h2 style="color:#0ff;margin-bottom:15px">🏆 Leaderboard</h2>
+
+<div class="my-position" id="myPosition">
+<div style="font-size:14px;opacity:0.8">Your Position</div>
+<div style="font-size:36px;font-weight:bold;background:linear-gradient(135deg,#ff0,#0ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent" id="myPos">-</div>
+</div>
+
+<div class="lb-tabs">
+<div class="lb-tab active" onclick="switchLeaderboard('global')">🌍 Global</div>
+<div class="lb-tab" onclick="switchLeaderboard('friends')">👥 Friends</div>
+<div class="lb-tab" onclick="switchLeaderboard('clans')">🏰 Clans</div>
+</div>
+
+<div id="leaderboardContent"></div>
+</div>
+</div>
+
 <div id="mapPage" class="page">
 <div class="s">
-<h2 style="color:#0ff;margin-bottom:15px">🗺️ Protein Zones</h2>
+<h2 style="color:#0ff;margin-bottom:15px">🏰 Clan Territories</h2>
 <div id="map"></div>
 <div class="map-info">
-<div>📍 Your Location: <span id="userLoc">Detecting...</span></div>
-<div>🧬 Nearby Protein: <span id="nearProtein">0</span></div>
+<div>🏆 Top Clan: <span id="topClan">Loading...</span></div>
+<div>👥 Your Clan: <span id="userClan">None</span></div>
+</div>
+</div>
+</div>
+
+<div id="statsPage" class="page">
+<div class="s">
+<h2 style="color:#0ff;margin-bottom:8px">🇹🇷 Turkey Mining Statistics</h2>
+<div style="font-size:13px;opacity:.85">Color intensity = total <span style="color:#0ff;font-weight:bold">POINTS</span> mined in that city. Hover to see details.</div>
+<div id="turkeyMapStatic"></div>
+<div class="map-info">
+<div id="turkeyInfoText">Hover a city to see stats.</div>
+<div id="turkeySummary" style="margin-top:8px;font-size:13px;opacity:0.9;display:none">
+🧾 Total cities in stats: <span id="cityCount">0</span><br>
+💰 Total POINTS in Turkey: <span id="totalPoints">0</span>
+</div>
 </div>
 </div>
 </div>
@@ -67,79 +148,524 @@ h1{font-size:28px;background:linear-gradient(90deg,#0ff,#f0f);-webkit-background
 </div>
 
 <script>
-let d={protein:0,energy:50,maxEnergy:50,level:1,xp:0,lat:51.1079,lng:17.0385};
-let map,userMarker;
+const API_URL = '/api';
+let userId = null;
+let tgUser = null;
+let userLat = null;
+let userLng = null;
+let d = {protein:0,energy:0,maxEnergy:50,level:1,xp:0};
+let map, userMarker;
+let currentLbType = 'global';
+let turkeyStatsCache = null;
+let turkeyStaticInitialized = false;
 
-function u(){
-document.getElementById('p').textContent=d.protein;
-document.getElementById('et').textContent=d.energy+'/'+d.maxEnergy;
-document.getElementById('eb').style.width=(d.energy/d.maxEnergy*100)+'%';
-document.getElementById('lvl').textContent='LEVEL '+d.level;
-document.getElementById('xp').textContent='XP: '+d.xp+'/100';
+const clanLocations = {
+  1: {name: 'Ankara', lat: 39.9334, lng: 32.8597, emoji: '🏛️', color: '#e74c3c'},
+  2: {name: 'Istanbul', lat: 41.0082, lng: 28.9784, emoji: '🌉', color: '#3498db'},
+  3: {name: 'Izmir', lat: 38.4237, lng: 27.1428, emoji: '🏖️', color: '#2ecc71'},
+  4: {name: 'Antalya', lat: 36.8969, lng: 30.7133, emoji: '🏔️', color: '#f39c12'},
+  5: {name: 'Bursa', lat: 40.1826, lng: 29.0665, emoji: '🏙️', color: '#9b59b6'}
+};
+
+if(window.Telegram?.WebApp){
+  Telegram.WebApp.expand();
+  tgUser = Telegram.WebApp.initDataUnsafe?.user;
+  userId = tgUser?.id;
 }
 
-function m(){
-if(d.energy<=0){alert('⚡ No energy!');return;}
-d.energy--;
-d.protein+=5;
-d.xp+=5;
-if(d.xp>=100){d.level++;d.xp=0;}
-u();
+if(navigator.geolocation){
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      userLat = pos.coords.latitude;
+      userLng = pos.coords.longitude;
+    },
+    err => {
+      console.warn('Geo error', err);
+    },
+    {enableHighAccuracy:false,timeout:5000,maximumAge:600000}
+  );
+}
+
+async function loadUser(){
+  if(!userId) return;
+  
+  try{
+    const res = await fetch(`${API_URL}/user/${userId}`);
+    const data = await res.json();
+    
+    d.protein = data.protein;
+    d.energy = data.energy;
+    d.maxEnergy = data.maxEnergy;
+    d.level = data.level;
+    d.xp = data.xp;
+    
+    updateUI();
+    sendUserTrack();
+  }catch(e){
+    console.error('Load error:', e);
+  }
+}
+
+function updateUI(){
+  document.getElementById('p').textContent = d.protein;
+  document.getElementById('et').textContent = d.energy + '/' + d.maxEnergy;
+  document.getElementById('eb').style.width = (d.energy/d.maxEnergy*100) + '%';
+  document.getElementById('lvl').textContent = 'LEVEL ' + d.level;
+  document.getElementById('xp').textContent = 'XP: ' + d.xp + '/' + (d.level * 100);
+  document.getElementById('btn').disabled = d.energy <= 0;
+}
+
+function createParticles(x, y, emoji){
+  for(let i = 0; i < 10; i++){
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    particle.textContent = emoji;
+    particle.style.left = x + 'px';
+    particle.style.top = y + 'px';
+    particle.style.transform = `translate(${(Math.random() - 0.5) * 200}px, -${Math.random() * 100}px)`;
+    document.body.appendChild(particle);
+    setTimeout(() => particle.remove(), 2000);
+  }
+}
+
+async function mine(){
+  if(d.energy <= 0){
+    alert('⚡ No energy! Wait for regeneration...');
+    return;
+  }
+  
+  if(!userId){
+    alert('⚠️ Telegram user ID not found');
+    return;
+  }
+  
+  const btn = document.getElementById('btn');
+  btn.classList.add('clicked');
+  setTimeout(() => btn.classList.remove('clicked'), 600);
+  
+  const rect = btn.getBoundingClientRect();
+  createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, '💎');
+  
+  try{
+    const res = await fetch(`${API_URL}/mine/${userId}`, {method: 'POST'});
+    const result = await res.json();
+    
+    if(!result.success){
+      alert(result.error || 'Mining failed');
+      return;
+    }
+    
+    d.protein = result.protein;
+    d.energy = result.energy;
+    d.xp = result.xp;
+    d.level = result.level;
+    
+    updateUI();
+    sendUserTrack();
+    
+    const proteinEl = document.getElementById('p');
+    proteinEl.classList.add('grow');
+    setTimeout(() => proteinEl.classList.remove('grow'), 500);
+    
+    showDropMessage(result);
+    
+  }catch(e){
+    console.error('Mine error:', e);
+  }
+}
+
+function showDropMessage(result){
+  const msg = document.createElement('div');
+  msg.className = 'drop-msg';
+  
+  if(result.rarity === 'LEGENDARY'){
+    msg.classList.add('legendary');
+    msg.style.borderColor = '#9b59b6';
+    createParticles(window.innerWidth / 2, window.innerHeight / 2, '💎');
+  }else if(result.rarity === 'EPIC'){
+    msg.style.borderColor = '#e67e22';
+    createParticles(window.innerWidth / 2, window.innerHeight / 2, '🔮');
+  }else if(result.rarity === 'RARE'){
+    msg.style.borderColor = '#3498db';
+  }else{
+    msg.style.borderColor = '#fff';
+  }
+  
+  msg.innerHTML = `${result.emoji} ${result.rarity}<br>+${result.gained} PROTEIN<br>${result.multiplier > 1 ? `(x${result.multiplier})` : ''}${result.levelup ? '<br>🔥 LEVEL UP!' : ''}`;
+  
+  document.body.appendChild(msg);
+  setTimeout(() => msg.remove(), 2500);
 }
 
 function showPage(page){
-document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-if(page==='mine'){
-document.getElementById('minePage').classList.add('active');
-document.querySelectorAll('.tab')[0].classList.add('active');
-}else if(page==='map'){
-document.getElementById('mapPage').classList.add('active');
-document.querySelectorAll('.tab')[1].classList.add('active');
-if(!map)initMap();
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+  
+  if(page === 'mine'){
+    document.getElementById('minePage').classList.add('active');
+    document.querySelectorAll('.tabs .tab')[0].classList.add('active');
+  }else if(page === 'leaderboard'){
+    document.getElementById('leaderboardPage').classList.add('active');
+    document.querySelectorAll('.tabs .tab')[1].classList.add('active');
+    loadLeaderboard();
+  }else if(page === 'map'){
+    document.getElementById('mapPage').classList.add('active');
+    document.querySelectorAll('.tabs .tab')[2].classList.add('active');
+    if(!map) initMap();
+  }else if(page === 'stats'){
+    document.getElementById('statsPage').classList.add('active');
+    document.querySelectorAll('.tabs .tab')[3].classList.add('active');
+    ensureTurkeyStatic();
+  }
 }
+
+async function loadLeaderboard(){
+  if(!userId) return;
+  
+  try{
+    const posRes = await fetch(`${API_URL}/user/position/${userId}`);
+    const posData = await posRes.json();
+    document.getElementById('myPos').textContent = '#' + posData.position;
+  }catch(e){
+    console.error('Position error:', e);
+  }
+  
+  switchLeaderboard(currentLbType);
 }
 
-function initMap(){
-map=L.map('map').setView([d.lat,d.lng],13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-attribution:'© OpenStreetMap'
-}).addTo(map);
+async function switchLeaderboard(type){
+  currentLbType = type;
+  
+  document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+  event?.target?.classList?.add('active') || document.querySelectorAll('.lb-tab')[type === 'global' ? 0 : type === 'friends' ? 1 : 2].classList.add('active');
+  
+  const content = document.getElementById('leaderboardContent');
+  content.innerHTML = '<div style="text-align:center;padding:20px">Loading...</div>';
+  
+  try{
+    if(type === 'global'){
+      const res = await fetch(`${API_URL}/leaderboard/global`);
+      const data = await res.json();
+      renderLeaderboard(data, 'global');
+    }else if(type === 'friends'){
+      const res = await fetch(`${API_URL}/leaderboard/friends/${userId}`);
+      const data = await res.json();
+      
+      if(data.length === 0){
+        content.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.8">No friends yet!<br>Invite friends to compete!</div>';
+        return;
+      }
+      
+      renderLeaderboard(data, 'friends');
+    }else if(type === 'clans'){
+      const res = await fetch(`${API_URL}/clans`);
+      const data = await res.json();
+      renderClanLeaderboard(data);
+    }
+  }catch(e){
+    console.error('Leaderboard error:', e);
+    content.innerHTML = '<div style="text-align:center;padding:20px;color:#f00">Error loading leaderboard</div>';
+  }
+}
 
-userMarker=L.marker([d.lat,d.lng]).addTo(map)
-.bindPopup('You are here!').openPopup();
+function renderLeaderboard(data, type){
+  const content = document.getElementById('leaderboardContent');
+  let html = '';
+  
+  data.forEach((item, idx) => {
+    const isMe = item.user_id === userId;
+    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+    
+    html += `
+      <div class="lb-item ${isMe ? 'me' : ''}">
+        <div class="lb-pos">${medal}</div>
+        <div class="lb-info">
+          <div class="lb-name">${isMe ? 'YOU' : 'Player ' + item.user_id}</div>
+          <div class="lb-stats">Level ${item.level} • ${item.xp} XP</div>
+        </div>
+        <div class="lb-protein">${item.protein} 🧬</div>
+      </div>
+    `;
+  });
+  
+  content.innerHTML = html;
+}
 
-// Example protein zones
-let zones=[
-{lat:51.11,lng:17.04,protein:100},
-{lat:51.10,lng:17.05,protein:150},
-{lat:51.12,lng:17.03,protein:200}
+function renderClanLeaderboard(data){
+  const content = document.getElementById('leaderboardContent');
+  let html = '';
+  
+  data.forEach((clan, idx) => {
+    const loc = clanLocations[clan.id];
+    const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+    
+    html += `
+      <div class="lb-item">
+        <div class="lb-pos">${medal}</div>
+        <div class="lb-info">
+          <div class="lb-name">${loc ? loc.emoji : ''} ${clan.name}</div>
+          <div class="lb-stats">👥 ${clan.members_count} members</div>
+        </div>
+        <div class="lb-protein">${clan.total_protein} 🧬</div>
+      </div>
+    `;
+  });
+  
+  content.innerHTML = html;
+}
+
+async function initMap(){
+  map = L.map('map').setView([39.0, 35.0], 6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© OpenStreetMap'}).addTo(map);
+  
+  try{
+    const res = await fetch(`${API_URL}/clans`);
+    const clans = await res.json();
+    
+    let topClan = {name: 'None', protein: 0};
+    
+    clans.forEach(clan => {
+      const loc = clanLocations[clan.id];
+      if(!loc) return;
+      
+      if(clan.total_protein > topClan.protein) topClan = {name: loc.name, protein: clan.total_protein};
+      
+      L.circle([loc.lat, loc.lng], {
+        color: loc.color,
+        fillColor: loc.color,
+        fillOpacity: 0.2,
+        radius: Math.max(50000, clan.total_protein * 1000)
+      }).addTo(map);
+      
+      const marker = L.marker([loc.lat, loc.lng]).addTo(map);
+      const popupContent = `<div class="clan-popup"><h3>${loc.emoji} ${loc.name}</h3><div>🧬 Total: <b>${clan.total_protein}</b></div><div>👥 Members: <b>${clan.members_count}</b></div></div>`;
+      marker.bindPopup(popupContent);
+    });
+    
+    document.getElementById('topClan').textContent = `${topClan.name} (${topClan.protein} protein)`;
+  }catch(e){
+    console.error('Map error:', e);
+  }
+}
+
+function getTurkeyCityColor(points){
+  return points > 100000 ? '#800026' :
+         points > 50000  ? '#BD0026' :
+         points > 20000  ? '#E31A1C' :
+         points > 10000  ? '#FC4E2A' :
+         points > 5000   ? '#FD8D3C' :
+         points > 1000   ? '#FEB24C' :
+         points > 100    ? '#FED976' :
+                           '#FFEDA0';
+}
+
+const turkeyCityCoords = {
+  'Istanbul': {lat:41.015137,lng:28.97953},
+  'Ankara': {lat:39.9334,lng:32.8597},
+  'Izmir': {lat:38.4237,lng:27.1428},
+  'Bursa': {lat:40.1950,lng:29.0600},
+  'Antalya': {lat:36.8969,lng:30.7133},
+  'Adana': {lat:37.0,lng:35.3213},
+  'Konya': {lat:37.8746,lng:32.4932},
+  'Gaziantep': {lat:37.0662,lng:37.3833},
+  'Kayseri': {lat:38.7225,lng:35.4875},
+  'Mersin': {lat:36.8121,lng:34.6415},
+  'Diyarbakır': {lat:37.9144,lng:40.2306},
+  'Samsun': {lat:41.2867,lng:36.33},
+  'Trabzon': {lat:41.0015,lng:39.7178},
+  'Erzurum': {lat:39.9043,lng:41.2679},
+  'Eskişehir': {lat:39.7667,lng:30.5256},
+  'Sakarya': {lat:40.7569,lng:30.3781},
+  'Kocaeli': {lat:40.8533,lng:29.8815},
+  'Malatya': {lat:38.3552,lng:38.3095},
+  'Şanlıurfa': {lat:37.1591,lng:38.7969}
+};
+
+const mockTurkeyStats = [
+  {name:'Istanbul', points: 125000, users: 320},
+  {name:'Ankara', points: 88000, users: 210},
+  {name:'Izmir', points: 64000, users: 160},
+  {name:'Bursa', points: 42000, users: 110},
+  {name:'Antalya', points: 38000, users: 95},
+  {name:'Adana', points: 27000, users: 70},
+  {name:'Konya', points: 19000, users: 55},
+  {name:'Gaziantep', points: 16000, users: 48},
+  {name:'Kayseri', points: 14000, users: 40},
+  {name:'Mersin', points: 12000, users: 36},
+  {name:'Samsun', points: 9000, users: 28},
+  {name:'Trabzon', points: 7500, users: 22},
+  {name:'Diyarbakır', points: 6800, users: 20},
+  {name:'Şanlıurfa', points: 6400, users: 18},
+  {name:'Malatya', points: 5200, users: 15},
+  {name:'Eskişehir', points: 4800, users: 14},
+  {name:'Kocaeli', points: 4300, users: 13},
+  {name:'Sakarya', points: 3900, users: 12}
 ];
 
-zones.forEach(z=>{
-L.circle([z.lat,z.lng],{
-color:'#0ff',
-fillColor:'#f0f',
-fillOpacity:0.3,
-radius:500
-}).addTo(map).bindPopup(`🧬 Protein: ${z.protein}`);
-});
-
-if(navigator.geolocation){
-navigator.geolocation.getCurrentPosition(pos=>{
-d.lat=pos.coords.latitude;
-d.lng=pos.coords.longitude;
-map.setView([d.lat,d.lng],13);
-userMarker.setLatLng([d.lat,d.lng]);
-document.getElementById('userLoc').textContent=d.lat.toFixed(4)+', '+d.lng.toFixed(4);
-});
-}
+function updateTurkeyInfo(cityName, points, users){
+  const el = document.getElementById('turkeyInfoText');
+  if(!el) return;
+  if(!cityName){
+    el.innerHTML = 'Hover a city to see stats.';
+  }else{
+    const pts = (points || 0).toLocaleString('en-US');
+    const us = users || 0;
+    el.innerHTML = `📍 City: <span style="color:#0ff;font-weight:bold">${cityName}</span> &nbsp; · &nbsp; 🧬 <span style="color:#0ff;font-weight:bold">${pts}</span> POINTS &nbsp; · &nbsp; 👥 <span style="color:#0ff;font-weight:bold">${us}</span> users`;
+  }
 }
 
-document.getElementById('btn').addEventListener('click',m);
-if(window.Telegram?.WebApp){Telegram.WebApp.expand();}
-u();
-setInterval(function(){if(d.energy<d.maxEnergy){d.energy++;u();}},5000);
+function updateTurkeySummary(){
+  const cityCountEl = document.getElementById('cityCount');
+  const totalPointsEl = document.getElementById('totalPoints');
+  if(!cityCountEl || !totalPointsEl || !turkeyStatsCache) return;
+  const totalCities = turkeyStatsCache.length;
+  const totalPoints = turkeyStatsCache.reduce((sum, c) => sum + (c.points || 0), 0);
+  cityCountEl.textContent = totalCities;
+  totalPointsEl.textContent = totalPoints.toLocaleString('en-US');
+}
+
+async function refreshTurkeyStats(){
+  try{
+    const res = await fetch(`${API_URL}/turkey-stats`);
+    if(!res.ok){
+      throw new Error('turkey-stats HTTP ' + res.status);
+    }
+    const data = await res.json();
+    const realStats = (data.cityStats || []).filter(c => c && c.name);
+    if(realStats.length > 0){
+      // We have at least one real city → use only real data
+      turkeyStatsCache = realStats;
+    }else{
+      // No real data at all → fall back to mockup
+      turkeyStatsCache = mockTurkeyStats;
+    }
+  }catch(e){
+    console.error('Turkey stats error, using mock data:', e);
+    turkeyStatsCache = mockTurkeyStats;
+  }
+  updateTurkeySummary();
+  renderTurkeyStatic();
+}
+
+function renderTurkeyStatic(){
+  if(!turkeyStatsCache) return;
+  if(typeof Highcharts === 'undefined' || !Highcharts.mapChart){
+    console.warn('Highcharts Maps not loaded; static Turkey map unavailable.');
+    return;
+  }
+
+  const data = turkeyStatsCache.map(c => ({
+    name: c.name,
+    value: c.points || 0,
+    users: c.users || 0
+  }));
+
+  const container = document.getElementById('turkeyMapStatic');
+  if(!container) return;
+
+  // Destroy previous chart instance if any
+  if(container._highchartsChart){
+    try{
+      container._highchartsChart.destroy();
+    }catch(e){}
+    container._highchartsChart = null;
+  }
+
+  const chart = Highcharts.mapChart('turkeyMapStatic',{
+    chart:{
+      map:'countries/tr/tr-all',
+      backgroundColor:'transparent',
+      style:{fontFamily:'-apple-system,sans-serif'},
+      spacing:[10,10,10,10]
+    },
+    title:{text:''},
+    credits:{enabled:false},
+    legend:{
+      title:{text:'Total POINTS mined'},
+      layout:'horizontal',
+      align:'center',
+      verticalAlign:'bottom',
+      floating:false,
+      backgroundColor:'rgba(10,10,30,.8)',
+      borderColor:'#0ff',
+      borderWidth:1,
+      symbolRadius:0,
+      padding:6,
+      margin:8,
+      width:220
+    },
+    mapNavigation:{enabled:true},
+    colorAxis:{
+      min:0,
+      stops:[
+        [0,'#102a43'],
+        [0.4,'#2f80ed'],
+        [0.7,'#56ccf2'],
+        [1,'#f2ff4b']
+      ]
+    },
+    tooltip:{
+      useHTML:true,
+      backgroundColor:'rgba(10,10,30,0.95)',
+      borderColor:'#0ff',
+      borderRadius:8,
+      style:{color:'#fff',fontSize:'12px'},
+      pointFormatter:function(){
+        const pts = this.value || 0;
+        const users = this.users || 0;
+        return `<b>${this.name}</b><br/>`+
+               `Total POINTS: <b>${pts.toLocaleString('en-US')}</b><br/>`+
+               `Users: <b>${users.toLocaleString('en-US')}</b>`;
+      }
+    },
+    series:[{
+      data,
+      joinBy:['name','name'],
+      name:'Total POINTS',
+      states:{
+        hover:{
+          color:'#f0f',
+          borderColor:'#0ff',
+          borderWidth:1
+        }
+      },
+      dataLabels:{enabled:false}
+    }]
+  });
+
+  container._highchartsChart = chart;
+}
+
+function ensureTurkeyStatic(){
+  if(turkeyStaticInitialized) return;
+  turkeyStaticInitialized = true;
+  refreshTurkeyStats();
+}
+
+async function sendUserTrack(){
+  if(!userId || userLat == null || userLng == null) return;
+  try{
+    await fetch(`${API_URL}/user-track`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        telegramId:userId,
+        username:tgUser?.username || null,
+        firstName:tgUser?.first_name || null,
+        lastName:tgUser?.last_name || null,
+        lat:userLat,
+        lng:userLng,
+        points:d.protein
+      })
+    });
+  }catch(e){
+    console.error('User-track error:', e);
+  }
+}
+
+document.getElementById('btn').addEventListener('click', mine);
+loadUser();
+setInterval(loadUser, 5000);
 </script>
 </body>
 </html>
