@@ -7,8 +7,10 @@ from datetime import datetime
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-# Database connection
-conn = sqlite3.connect("/opt/proteinmine/proteinmine.db", check_same_thread=False)
+# Database connection (use path relative to this file, works on Windows/Linux)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "proteinmine.db")
+conn = sqlite3.connect(DB_PATH, check_same_thread=False)
 cursor = conn.cursor()
 
 def init_db():
@@ -43,8 +45,8 @@ def init_db():
     conn.commit()
 
 init_db()
-
-API_TOKEN = "8504100526:AAH1nuyt9TBzZgif8HLxSl1CaMCyXCsJYHo"
+API_TOKEN = "7101622767:AAFNp4Lpi26rDCpabWIZgSqL-M6ECnkEew0"
+# API_TOKEN = "8504100526:AAH1nuyt9TBzZgif8HLxSl1CaMCyXCsJYHo"
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 

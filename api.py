@@ -1,19 +1,134 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import os
 import sqlite3
 import time
+import math
 
 app = Flask(__name__)
 CORS(app)
 
-DB_PATH = "/opt/proteinmine/proteinmine.db"
+# Resolve DB path in a way that works both on local (Windows) and server (Linux)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_DB_PATH = os.path.join(BASE_DIR, "proteinmine.db")
+DB_PATH = os.getenv("PROTEINMINE_DB", DEFAULT_DB_PATH)
+
 MAX_ENERGY = 50
 ENERGY_REGEN_TIME = 30
+
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def init_stats_tables():
+    """
+    Ensure tables for the statistics / Turkey map exist.
+    This is safe to run on every start (CREATE TABLE IF NOT EXISTS).
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS user_track (
+            telegram_id INTEGER PRIMARY KEY,
+            username TEXT,
+            first_name TEXT,
+            last_name TEXT,
+            city TEXT,
+            lat REAL,
+            lng REAL,
+            points INTEGER DEFAULT 0,
+            last_seen INTEGER
+        )
+        """
+    )
+
+    conn.commit()
+    conn.close()
+
+
+# Approximate coordinates of main Turkish cities / provinces
+TURKEY_CITIES = {
+    "Istanbul": (41.015137, 28.97953),
+    "Ankara": (39.9334, 32.8597),
+    "Izmir": (38.4237, 27.1428),
+    "Bursa": (40.1950, 29.0600),
+    "Antalya": (36.8969, 30.7133),
+    "Adana": (37.0, 35.3213),
+    "Konya": (37.8746, 32.4932),
+    "Gaziantep": (37.0662, 37.3833),
+    "Kayseri": (38.7225, 35.4875),
+    "Mersin": (36.8121, 34.6415),
+    "Diyarbakır": (37.9144, 40.2306),
+    "Samsun": (41.2867, 36.33),
+    "Trabzon": (41.0015, 39.7178),
+    "Erzurum": (39.9043, 41.2679),
+    "Eskişehir": (39.7667, 30.5256),
+    "Sakarya": (40.7569, 30.3781),
+    "Kocaeli": (40.8533, 29.8815),
+    "Malatya": (38.3552, 38.3095),
+    "Şanlıurfa": (37.1591, 38.7969),
+}
+
+# Rough radius (km) to still count as being "from" a given Turkish city
+CITY_RADIUS_KM = 120.0
+
+
+def haversine_km(lat1, lon1, lat2, lon2):
+    """
+    Compute approximate distance (km) between 2 lat/lng points.
+    """
+    r = 6371.0
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    d_phi = math.radians(lat2 - lat1)
+    d_lambda = math.radians(lon2 - lon1)
+
+    a = (
+        math.sin(d_phi / 2) ** 2
+        + math.cos(phi1) * math.cos(phi2) * math.sin(d_lambda / 2) ** 2
+    )
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return r * c
+
+
+def detect_turkey_city(lat, lng):
+    """
+    Map raw GPS coords to nearest Turkish city (province) name.
+    Only returns a city if distance is within CITY_RADIUS_KM.
+    """
+    if lat is None or lng is None:
+        return None
+
+    try:
+        lat = float(lat)
+        lng = float(lng)
+    except (TypeError, ValueError):
+        return None
+
+    best_city = None
+    best_dist = None
+
+    for city_name, (c_lat, c_lng) in TURKEY_CITIES.items():
+        dist = haversine_km(lat, lng, c_lat, c_lng)
+        if best_dist is None or dist < best_dist:
+            best_dist = dist
+            best_city = city_name
+
+    if best_city is not None and best_dist is not None and best_dist <= CITY_RADIUS_KM:
+        return best_city
+
+    return None
+
+
+@app.before_first_request
+def _startup():
+    # Make sure our stats tables exist before any request hits
+    init_stats_tables()
 
 @app.route('/api/user/<int:user_id>', methods=['GET'])
 def get_user(user_id):
@@ -39,6 +154,111 @@ def get_user(user_id):
         "level": row[3],
         "maxEnergy": MAX_ENERGY
     })
+
+
+@app.route('/api/user-track', methods=['POST'])
+def user_track():
+    """
+    Track a single snapshot from the WebApp:
+    - telegramId, username, first/last name
+    - lat/lng (optional)
+    - current points in the web mini-game
+
+    Frontend JS sends POST /api/user-track with this payload.
+    We store one row per Telegram user and update it on every call.
+    """
+    data = request.get_json(silent=True) or {}
+
+    telegram_id = data.get("telegramId")
+    username = data.get("username")
+    first_name = data.get("firstName")
+    last_name = data.get("lastName")
+    points = data.get("points") or 0
+    lat = data.get("lat")
+    lng = data.get("lng")
+
+    try:
+        if telegram_id is not None:
+            telegram_id = int(telegram_id)
+    except (TypeError, ValueError):
+        telegram_id = None
+
+    try:
+        points = int(points)
+    except (TypeError, ValueError):
+        points = 0
+
+    # If no Telegram id we still accept, but it won't be user-unique
+    # (rare in real Telegram WebApp usage).
+    city = detect_turkey_city(lat, lng)
+    now_ts = int(time.time())
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Upsert by telegram_id; if it is NULL we just insert a new row each time
+    if telegram_id is not None:
+        cursor.execute(
+            """
+            INSERT INTO user_track (
+                telegram_id, username, first_name, last_name,
+                city, lat, lng, points, last_seen
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(telegram_id) DO UPDATE SET
+                username = excluded.username,
+                first_name = excluded.first_name,
+                last_name = excluded.last_name,
+                city = excluded.city,
+                lat = excluded.lat,
+                lng = excluded.lng,
+                points = excluded.points,
+                last_seen = excluded.last_seen
+            """,
+            (
+                telegram_id,
+                username,
+                first_name,
+                last_name,
+                city,
+                float(lat) if lat is not None else None,
+                float(lng) if lng is not None else None,
+                points,
+                now_ts,
+            ),
+        )
+    else:
+        cursor.execute(
+            """
+            INSERT INTO user_track (
+                telegram_id, username, first_name, last_name,
+                city, lat, lng, points, last_seen
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                None,
+                username,
+                first_name,
+                last_name,
+                city,
+                float(lat) if lat is not None else None,
+                float(lng) if lng is not None else None,
+                points,
+                now_ts,
+            ),
+        )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify(
+        {
+            "ok": True,
+            "city": city,
+            "points": points,
+        }
+    )
 
 @app.route('/api/mine/<int:user_id>', methods=['POST'])
 def mine(user_id):
@@ -132,6 +352,55 @@ def mine(user_id):
         "level": level,
         "levelup": levelup
     })
+
+
+@app.route('/api/turkey-stats', methods=['GET'])
+def turkey_stats():
+    """
+    Aggregate city statistics for the Turkey map.
+
+    Response shape:
+    {
+      "cityStats": [
+        {"name": "Istanbul", "points": 12345, "users": 10},
+        ...
+      ]
+    }
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT city,
+               COUNT(*) AS users,
+               COALESCE(SUM(points), 0) AS total_points
+        FROM user_track
+        WHERE city IS NOT NULL AND city != ''
+        GROUP BY city
+        ORDER BY total_points DESC
+        """
+    )
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    city_stats = []
+    for row in rows:
+        city_name = row[0]
+        users = row[1] or 0
+        total_points = row[2] or 0
+        if not city_name:
+            continue
+        city_stats.append(
+            {
+                "name": city_name,
+                "points": int(total_points),
+                "users": int(users),
+            }
+        )
+
+    return jsonify({"cityStats": city_stats})
 
 @app.route('/api/clans', methods=['GET'])
 def get_clans():
