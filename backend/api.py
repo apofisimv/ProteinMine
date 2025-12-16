@@ -163,17 +163,16 @@ def get_user(user_id):
     row = cursor.fetchone()
     # Auto-create a user row if it doesn't exist yet (first time from WebApp)
     if row is None:
-        cursor.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
-        conn.commit()
+        # Explicitly set sane defaults instead of relying on DB defaults
         cursor.execute(
             """
-            SELECT protein, energy, xp, level 
-            FROM users 
-            WHERE user_id = ?
-        """,
-            (user_id,),
+            INSERT INTO users (user_id, protein, energy, xp, level, last_daily, daily_streak)
+            VALUES (?, 0, ?, 0, 1, NULL, 0)
+            """,
+            (user_id, MAX_ENERGY),
         )
-        row = cursor.fetchone()
+        conn.commit()
+        row = (0, MAX_ENERGY, 0, 1)
 
     conn.close()
 
@@ -328,17 +327,15 @@ def mine(user_id):
     row = cursor.fetchone()
     # Auto-create user if they don't exist yet (first time mining from WebApp)
     if row is None:
-        cursor.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
-        conn.commit()
         cursor.execute(
             """
-            SELECT protein, energy, xp, level 
-            FROM users 
-            WHERE user_id = ?
-        """,
-            (user_id,),
+            INSERT INTO users (user_id, protein, energy, xp, level, last_daily, daily_streak)
+            VALUES (?, 0, ?, 0, 1, NULL, 0)
+            """,
+            (user_id, MAX_ENERGY),
         )
-        row = cursor.fetchone()
+        conn.commit()
+        row = (0, MAX_ENERGY, 0, 1)
 
     protein, energy, xp, level = row
 

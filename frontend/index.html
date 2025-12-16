@@ -716,7 +716,7 @@ function ensureTurkeyStatic(){
 }
 
 async function sendUserTrack(){
-  if(!userId || userLat == null || userLng == null) return;
+  if(!userId) return;
   try{
     await fetch(`${API_URL}/user-track`, {
       method:'POST',
@@ -727,8 +727,9 @@ async function sendUserTrack(){
         firstName:tgUser?.first_name || null,
         lastName:tgUser?.last_name || null,
         photoUrl:tgUser?.photo_url || null,
-        lat:userLat,
-        lng:userLng,
+        // location is optional; may be null if user denied permissions
+        lat: typeof userLat === 'number' ? userLat : null,
+        lng: typeof userLng === 'number' ? userLng : null,
         points:d.protein
       })
     });
