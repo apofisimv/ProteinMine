@@ -133,13 +133,13 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 <div id="statsPage" class="page">
 <div class="s">
 <h2 style="color:#0ff;margin-bottom:8px">🇹🇷 Turkey Mining Statistics</h2>
-<div style="font-size:13px;opacity:.85">Color intensity = total <span style="color:#0ff;font-weight:bold">POINTS</span> mined in that city. Hover to see details.</div>
+<div style="font-size:13px;opacity:.85">Color intensity = total <span style="color:#0ff;font-weight:bold">PROTEIN</span> mined in that city. Hover to see details.</div>
 <div id="turkeyMapStatic"></div>
 <div class="map-info">
 <div id="turkeyInfoText">Hover a city to see stats.</div>
 <div id="turkeySummary" style="margin-top:8px;font-size:13px;opacity:0.9;display:none">
 🧾 Total cities in stats: <span id="cityCount">0</span><br>
-💰 Total POINTS in Turkey: <span id="totalPoints">0</span>
+💰 Total PROTEIN in Turkey: <span id="totalPoints">0</span>
 </div>
 </div>
 </div>
@@ -481,27 +481,6 @@ const turkeyCityCoords = {
   'Şanlıurfa': {lat:37.1591,lng:38.7969}
 };
 
-const mockTurkeyStats = [
-  {name:'Istanbul', points: 125000, users: 320},
-  {name:'Ankara', points: 88000, users: 210},
-  {name:'Izmir', points: 64000, users: 160},
-  {name:'Bursa', points: 42000, users: 110},
-  {name:'Antalya', points: 38000, users: 95},
-  {name:'Adana', points: 27000, users: 70},
-  {name:'Konya', points: 19000, users: 55},
-  {name:'Gaziantep', points: 16000, users: 48},
-  {name:'Kayseri', points: 14000, users: 40},
-  {name:'Mersin', points: 12000, users: 36},
-  {name:'Samsun', points: 9000, users: 28},
-  {name:'Trabzon', points: 7500, users: 22},
-  {name:'Diyarbakır', points: 6800, users: 20},
-  {name:'Şanlıurfa', points: 6400, users: 18},
-  {name:'Malatya', points: 5200, users: 15},
-  {name:'Eskişehir', points: 4800, users: 14},
-  {name:'Kocaeli', points: 4300, users: 13},
-  {name:'Sakarya', points: 3900, users: 12}
-];
-
 function updateTurkeyInfo(cityName, points, users){
   const el = document.getElementById('turkeyInfoText');
   if(!el) return;
@@ -510,7 +489,7 @@ function updateTurkeyInfo(cityName, points, users){
   }else{
     const pts = (points || 0).toLocaleString('en-US');
     const us = users || 0;
-    el.innerHTML = `📍 City: <span style="color:#0ff;font-weight:bold">${cityName}</span> &nbsp; · &nbsp; 🧬 <span style="color:#0ff;font-weight:bold">${pts}</span> POINTS &nbsp; · &nbsp; 👥 <span style="color:#0ff;font-weight:bold">${us}</span> users`;
+    el.innerHTML = `📍 City: <span style="color:#0ff;font-weight:bold">${cityName}</span> &nbsp; · &nbsp; 🧬 <span style="color:#0ff;font-weight:bold">${pts}</span> PROTEIN &nbsp; · &nbsp; 👥 <span style="color:#0ff;font-weight:bold">${us}</span> users`;
   }
 }
 
@@ -532,16 +511,11 @@ async function refreshTurkeyStats(){
     }
     const data = await res.json();
     const realStats = (data.cityStats || []).filter(c => c && c.name);
-    if(realStats.length > 0){
-      // We have at least one real city → use only real data
-      turkeyStatsCache = realStats;
-    }else{
-      // No real data at all → fall back to mockup
-      turkeyStatsCache = mockTurkeyStats;
-    }
+    // Use only real DB-backed data; if there is no data, keep it empty
+    turkeyStatsCache = realStats;
   }catch(e){
-    console.error('Turkey stats error, using mock data:', e);
-    turkeyStatsCache = mockTurkeyStats;
+    console.error('Turkey stats error:', e);
+    turkeyStatsCache = [];
   }
   updateTurkeySummary();
   renderTurkeyStatic();
@@ -581,7 +555,7 @@ function renderTurkeyStatic(){
     title:{text:''},
     credits:{enabled:false},
     legend:{
-      title:{text:'Total POINTS mined'},
+      title:{text:'Total PROTEIN mined'},
       layout:'horizontal',
       align:'center',
       verticalAlign:'bottom',
@@ -614,14 +588,14 @@ function renderTurkeyStatic(){
         const pts = this.value || 0;
         const users = this.users || 0;
         return `<b>${this.name}</b><br/>`+
-               `Total POINTS: <b>${pts.toLocaleString('en-US')}</b><br/>`+
+               `Total PROTEIN: <b>${pts.toLocaleString('en-US')}</b><br/>`+
                `Users: <b>${users.toLocaleString('en-US')}</b>`;
       }
     },
     series:[{
       data,
       joinBy:['name','name'],
-      name:'Total POINTS',
+      name:'Total PROTEIN',
       states:{
         hover:{
           color:'#f0f',
