@@ -49,10 +49,18 @@ def init_stats_tables():
             lat REAL,
             lng REAL,
             points INTEGER DEFAULT 0,
-            last_seen INTEGER
+            last_seen INTEGER,
+            photo_url TEXT
         )
         """
     )
+
+    # Backwards‑compat: add photo_url column if the table already existed
+    try:
+        cursor.execute("ALTER TABLE user_track ADD COLUMN photo_url TEXT")
+    except sqlite3.OperationalError:
+        # Column may already exist; ignore error
+        pass
 
     conn.commit()
     conn.close()
@@ -153,10 +161,21 @@ def get_user(user_id):
     )
 
     row = cursor.fetchone()
-    conn.close()
-
+    # Auto-create a user row if it doesn't exist yet (first time from WebApp)
     if row is None:
-        return jsonify({"error": "User not found"}), 404
+        cursor.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
+        conn.commit()
+        cursor.execute(
+            """
+            SELECT protein, energy, xp, level 
+            FROM users 
+            WHERE user_id = ?
+        """,
+            (user_id,),
+        )
+        row = cursor.fetchone()
+
+    conn.close()
 
     return jsonify(
         {
@@ -167,6 +186,20 @@ def get_user(user_id):
             "maxEnergy": MAX_ENERGY,
         }
     )
+
+
+@app.route("/api/referral/<int:user_id>", methods=["GET"])
+def get_referral_link(user_id):
+    """
+    Return a shareable referral link for the given Telegram user id.
+    Uses TELEGRAM_BOT_USERNAME from environment.
+    """
+    bot_username = os.getenv("TELEGRAM_BOT_USERNAME")
+    if not bot_username:
+        return jsonify({"error": "TELEGRAM_BOT_USERNAME is not configured"}), 500
+
+    ref_link = f"https://t.me/{bot_username}?start=ref{user_id}"
+    return jsonify({"referral_link": ref_link})
 
 
 @app.route("/api/user-track", methods=["POST"])
@@ -189,6 +222,7 @@ def user_track():
     points = data.get("points") or 0
     lat = data.get("lat")
     lng = data.get("lng")
+    photo_url = data.get("photoUrl")
 
     try:
         if telegram_id is not None:
@@ -215,9 +249,9 @@ def user_track():
             """
             INSERT INTO user_track (
                 telegram_id, username, first_name, last_name,
-                city, lat, lng, points, last_seen
+                city, lat, lng, points, last_seen, photo_url
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(telegram_id) DO UPDATE SET
                 username = excluded.username,
                 first_name = excluded.first_name,
@@ -226,7 +260,8 @@ def user_track():
                 lat = excluded.lat,
                 lng = excluded.lng,
                 points = excluded.points,
-                last_seen = excluded.last_seen
+                last_seen = excluded.last_seen,
+                photo_url = excluded.photo_url
             """,
             (
                 telegram_id,
@@ -238,6 +273,7 @@ def user_track():
                 float(lng) if lng is not None else None,
                 points,
                 now_ts,
+                photo_url,
             ),
         )
     else:
@@ -245,9 +281,9 @@ def user_track():
             """
             INSERT INTO user_track (
                 telegram_id, username, first_name, last_name,
-                city, lat, lng, points, last_seen
+                city, lat, lng, points, last_seen, photo_url
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 None,
@@ -259,6 +295,7 @@ def user_track():
                 float(lng) if lng is not None else None,
                 points,
                 now_ts,
+                photo_url,
             ),
         )
 
@@ -289,9 +326,19 @@ def mine(user_id):
     )
 
     row = cursor.fetchone()
+    # Auto-create user if they don't exist yet (first time mining from WebApp)
     if row is None:
-        conn.close()
-        return jsonify({"error": "User not found"}), 404
+        cursor.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
+        conn.commit()
+        cursor.execute(
+            """
+            SELECT protein, energy, xp, level 
+            FROM users 
+            WHERE user_id = ?
+        """,
+            (user_id,),
+        )
+        row = cursor.fetchone()
 
     protein, energy, xp, level = row
 
@@ -463,9 +510,16 @@ def get_global_leaderboard():
 
     cursor.execute(
         """
-        SELECT user_id, protein, level, xp 
-        FROM users 
-        ORDER BY protein DESC 
+        SELECT u.user_id,
+               u.protein,
+               u.level,
+               u.xp,
+               ut.username,
+               ut.photo_url
+        FROM   users AS u
+        LEFT JOIN user_track AS ut
+               ON ut.telegram_id = u.user_id
+        ORDER BY u.protein DESC
         LIMIT 50
     """
     )
@@ -481,6 +535,8 @@ def get_global_leaderboard():
                 "protein": row[1],
                 "level": row[2],
                 "xp": row[3],
+                "username": row[4],
+                "avatar_url": row[5],
             }
         )
 
@@ -494,10 +550,18 @@ def get_friends_leaderboard(user_id):
 
     cursor.execute(
         """
-        SELECT u.user_id, u.protein, u.level, u.xp
-        FROM friendships f
-        JOIN users u ON (f.friend_id = u.user_id)
-        WHERE f.user_id = ?
+        SELECT u.user_id,
+               u.protein,
+               u.level,
+               u.xp,
+               ut.username,
+               ut.photo_url
+        FROM   friendships AS f
+        JOIN   users AS u
+               ON f.friend_id = u.user_id
+        LEFT JOIN user_track AS ut
+               ON ut.telegram_id = u.user_id
+        WHERE  f.user_id = ?
         ORDER BY u.protein DESC
         LIMIT 20
     """,
@@ -515,6 +579,8 @@ def get_friends_leaderboard(user_id):
                 "protein": row[1],
                 "level": row[2],
                 "xp": row[3],
+                "username": row[4],
+                "avatar_url": row[5],
             }
         )
 

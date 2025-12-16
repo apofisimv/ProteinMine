@@ -37,7 +37,7 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 .i:hover{opacity:1;transform:translateX(5px)}
 .i span{color:#0ff;font-weight:bold}
 .e{width:100%;height:24px;background:rgba(0,255,255,0.2);border-radius:12px;overflow:hidden;margin-top:15px;box-shadow:inset 0 2px 10px rgba(0,0,0,0.5)}
-.eb{height:100%;background:linear-gradient(90deg,#0ff,#00ff88,#0ff);background-size:200% auto;animation:shine 2s linear infinite;transition:width 0.5s.ease;box-shadow:0 0 20px rgba(0,255,255,0.6)}
+.eb{height:100%;background:linear-gradient(90deg,#0ff,#00ff88,#0ff);background-size:200% auto;animation:shine 2s linear infinite;transition:width 0.5s ease;box-shadow:0 0 20px rgba(0,255,255,0.6)}
 .et{margin-top:8px;font-size:16px;color:#0ff;font-weight:bold}
 .b{width:200px;height:200px;border-radius:50%;background:linear-gradient(135deg,#0ff,#f0f,#ff0);color:#fff;font-size:36px;font-weight:bold;border:none;cursor:pointer;margin:30px auto;display:block;box-shadow:0 0 40px rgba(0,255,255,0.6),0 0 80px rgba(255,0,255,0.4);transition:all 0.3s;-webkit-tap-highlight-color:transparent;animation:pulse 2s ease infinite;position:relative}
 @keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 0 40px rgba(0,255,255,0.6),0 0 80px rgba(255,0,255,0.4)}50%{transform:scale(1.05);box-shadow:0 0 60px rgba(0,255,255,0.8),0 0 100px rgba(255,0,255,0.6)}}
@@ -75,11 +75,22 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 .lb-tab:hover{transform:translateY(-2px)}
 .lb-tab.active{background:linear-gradient(135deg,rgba(0,255,255,.2),rgba(255,0,255,.2));border-color:#0ff;box-shadow:0 5px 15px rgba(0,255,255,0.4)}
 .my-position{background:linear-gradient(135deg,rgba(255,0,255,0.3),rgba(255,0,100,0.2));padding:20px;border-radius:15px;margin-bottom:20px;text-align:center;border:2px solid rgba(255,0,255,0.5);box-shadow:0 8px 32px rgba(255,0,255,0.3)}
+.lb-avatar{width:32px;height:32px;border-radius:50%;overflow:hidden;margin-right:10px;flex-shrink:0;border:2px solid rgba(0,255,255,0.4);background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center}
+.lb-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.lb-avatar.placeholder{color:#0ff;font-weight:bold;font-size:16px}
+.user-info{font-size:14px;opacity:0.85;margin-bottom:8px}
+.invite-btn{display:block;width:100%;padding:12px 16px;margin-top:10px;border-radius:14px;background:linear-gradient(135deg,#0ff,#f0f);color:#000;font-weight:bold;border:none;cursor:pointer;font-size:16px;box-shadow:0 0 20px rgba(0,255,255,0.6);transition:all 0.2s}
+.invite-btn:active{transform:scale(0.97)}
+.invite-meta{font-size:13px;opacity:0.85;margin-top:6px}
 </style>
 </head>
 <body>
 <div class="c">
 <h1>🧬 PROTEINMINE</h1>
+<div id="userInfo" class="user-info">
+  <span id="userName">Connecting…</span>
+  <span id="userIdLabel" style="margin-left:8px;opacity:0.7;"></span>
+</div>
 
 <div class="tabs">
 <div class="tab active" onclick="showPage('mine')">⛏️ Mine</div>
@@ -104,6 +115,13 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 <div id="leaderboardPage" class="page">
 <div class="s">
 <h2 style="color:#0ff;margin-bottom:15px">🏆 Leaderboard</h2>
+
+<div id="inviteCard" style="margin-bottom:16px;text-align:left">
+<div style="font-size:16px;margin-bottom:4px">👉 Invite friend → <span style="color:#0ff;font-weight:bold">+ENERGY instantly</span></div>
+<div class="invite-meta">Each friend who joins with your link gives you +50 🧬 and +20 ⚡ energy.</div>
+<button id="inviteBtn" class="invite-btn">Invite a friend</button>
+<div id="inviteStatus" class="invite-meta"></div>
+</div>
 
 <div class="my-position" id="myPosition">
 <div style="font-size:14px;opacity:0.8">Your Position</div>
@@ -168,10 +186,68 @@ const clanLocations = {
   5: {name: 'Bursa', lat: 40.1826, lng: 29.0665, emoji: '🏙️', color: '#9b59b6'}
 };
 
+// Primary: Telegram WebApp context (real mini app usage)
 if(window.Telegram?.WebApp){
   Telegram.WebApp.expand();
   tgUser = Telegram.WebApp.initDataUnsafe?.user;
   userId = tgUser?.id;
+}
+const tg = window.Telegram.WebApp;
+
+  console.log("Telegram object:", tg);
+  console.log("Init data unsafe:", tg.initDataUnsafe);
+
+
+
+// Fallback 1: explicit ?user_id=123 or ?uid=123 in URL (useful for testing in browser)
+if(!userId){
+  try{
+    const params = new URLSearchParams(window.location.search);
+    const fromQuery = params.get('user_id') || params.get('uid');
+    if(fromQuery){
+      const parsed = parseInt(fromQuery, 10);
+      if(!Number.isNaN(parsed)){
+        userId = parsed;
+      }
+    }
+  }catch(e){
+    console.warn('Query param parse error', e);
+  }
+}
+
+// Fallback 2: persistent random test id in localStorage (browser testing)
+if(!userId){
+  try{
+    const stored = window.localStorage.getItem('proteinmine_test_user_id');
+    if(stored){
+      const parsed = parseInt(stored, 10);
+      if(!Number.isNaN(parsed)){
+        userId = parsed;
+      }
+    }
+    if(!userId){
+      userId = Math.floor(Math.random() * 1_000_000_000);
+      window.localStorage.setItem('proteinmine_test_user_id', String(userId));
+    }
+  }catch(e){
+    console.warn('localStorage user id error', e);
+  }
+}
+
+function updateUserHeader(){
+  const nameEl = document.getElementById('userName');
+  const idEl = document.getElementById('userIdLabel');
+  if(!nameEl || !idEl) return;
+
+  const username =
+    (tgUser && tgUser.username) ? '@' + tgUser.username :
+    (tgUser && (tgUser.first_name || tgUser.last_name))
+      ? `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim()
+      : 'Guest';
+
+  nameEl.textContent = username || 'Guest';
+  const idRow = userId ? `ID: ${userId}` : '';
+  idEl.textContent = idRow;
 }
 
 if(navigator.geolocation){
@@ -179,6 +255,7 @@ if(navigator.geolocation){
     pos => {
       userLat = pos.coords.latitude;
       userLng = pos.coords.longitude;
+      updateUserHeader();
     },
     err => {
       console.warn('Geo error', err);
@@ -194,11 +271,11 @@ async function loadUser(){
     const res = await fetch(`${API_URL}/user/${userId}`);
     const data = await res.json();
     
-    d.protein = data.protein;
-    d.energy = data.energy;
-    d.maxEnergy = data.maxEnergy;
-    d.level = data.level;
-    d.xp = data.xp;
+    d.protein = Number.isFinite(data.protein) ? data.protein : 0;
+    d.energy  = Number.isFinite(data.energy)  ? data.energy  : 0;
+    d.maxEnergy = Number.isFinite(data.maxEnergy) ? data.maxEnergy : 50;
+    d.level   = Number.isFinite(data.level)   ? data.level   : 1;
+    d.xp      = Number.isFinite(data.xp)      ? data.xp      : 0;
     
     updateUI();
     sendUserTrack();
@@ -209,10 +286,15 @@ async function loadUser(){
 
 function updateUI(){
   document.getElementById('p').textContent = d.protein;
-  document.getElementById('et').textContent = d.energy + '/' + d.maxEnergy;
-  document.getElementById('eb').style.width = (d.energy/d.maxEnergy*100) + '%';
-  document.getElementById('lvl').textContent = 'LEVEL ' + d.level;
-  document.getElementById('xp').textContent = 'XP: ' + d.xp + '/' + (d.level * 100);
+  const energy = Number.isFinite(d.energy) ? d.energy : 0;
+  const maxEnergy = Number.isFinite(d.maxEnergy) ? d.maxEnergy : 50;
+  const level = Number.isFinite(d.level) ? d.level : 1;
+  const xp = Number.isFinite(d.xp) ? d.xp : 0;
+
+  document.getElementById('et').textContent = `${energy}/${maxEnergy}`;
+  document.getElementById('eb').style.width = (maxEnergy > 0 ? (energy / maxEnergy * 100) : 0) + '%';
+  document.getElementById('lvl').textContent = 'LEVEL ' + level;
+  document.getElementById('xp').textContent = 'XP: ' + xp + '/' + (level * 100);
   document.getElementById('btn').disabled = d.energy <= 0;
 }
 
@@ -334,6 +416,47 @@ async function loadLeaderboard(){
   switchLeaderboard(currentLbType);
 }
 
+async function inviteFriend(){
+  if(!userId){
+    alert('⚠️ Telegram user ID not found');
+    return;
+  }
+
+  const statusEl = document.getElementById('inviteStatus');
+  if(statusEl){
+    statusEl.textContent = 'Generating your invite link...';
+  }
+
+  try{
+    const res = await fetch(`${API_URL}/referral/${userId}`);
+    const data = await res.json();
+
+    if(!res.ok || !data.referral_link){
+      throw new Error(data.error || 'Failed to get referral link');
+    }
+
+    const link = data.referral_link;
+    const text = `Join me mining protein in ProteinMine! 🚀\n${link}`;
+
+    let copied = false;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+      copied = true;
+    }
+
+    if(statusEl){
+      statusEl.textContent = copied
+        ? 'Referral link copied! Send it to a friend to get +20 ⚡ when they join.'
+        : link;
+    }
+  }catch(e){
+    console.error('Invite error:', e);
+    if(statusEl){
+      statusEl.textContent = 'Could not generate invite link.';
+    }
+  }
+}
+
 async function switchLeaderboard(type){
   currentLbType = type;
   
@@ -376,12 +499,22 @@ function renderLeaderboard(data, type){
   data.forEach((item, idx) => {
     const isMe = item.user_id === userId;
     const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
-    
+    const baseName = item.username || (`Player ${item.user_id}`);
+    const meDisplayName = tgUser?.username ? '@' + tgUser.username : (tgUser?.first_name || 'You');
+    const displayLabel = isMe ? 'YOU' : baseName;
+    const avatarName = isMe ? (meDisplayName || baseName) : baseName;
+    const avatarUrl = item.avatar_url || (isMe && tgUser?.photo_url) || null;
+    const initial = (avatarName && avatarName.trim().charAt(0).toUpperCase()) || 'U';
+    const avatarHtml = avatarUrl
+      ? `<div class="lb-avatar"><img src="${encodeURI(avatarUrl)}" alt="${avatarName}"></div>`
+      : `<div class="lb-avatar placeholder">${initial}</div>`;
+
     html += `
       <div class="lb-item ${isMe ? 'me' : ''}">
         <div class="lb-pos">${medal}</div>
+        ${avatarHtml}
         <div class="lb-info">
-          <div class="lb-name">${isMe ? 'YOU' : 'Player ' + item.user_id}</div>
+          <div class="lb-name">${displayLabel}</div>
           <div class="lb-stats">Level ${item.level} • ${item.xp} XP</div>
         </div>
         <div class="lb-protein">${item.protein} 🧬</div>
@@ -593,6 +726,7 @@ async function sendUserTrack(){
         username:tgUser?.username || null,
         firstName:tgUser?.first_name || null,
         lastName:tgUser?.last_name || null,
+        photoUrl:tgUser?.photo_url || null,
         lat:userLat,
         lng:userLng,
         points:d.protein
@@ -604,6 +738,10 @@ async function sendUserTrack(){
 }
 
 document.getElementById('btn').addEventListener('click', mine);
+const inviteBtn = document.getElementById('inviteBtn');
+if(inviteBtn){
+  inviteBtn.addEventListener('click', inviteFriend);
+}
 loadUser();
 setInterval(loadUser, 5000);
 </script>

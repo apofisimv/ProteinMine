@@ -77,6 +77,11 @@ BOOST_COST = 100
 BOOST_DURATION = 600
 BOOST_MULTIPLIER = 2
 
+# Referral rewards (friend & referrer)
+REFERRAL_FRIEND_BONUS_PROTEIN = 100
+REFERRAL_REFERRER_BONUS_PROTEIN = 50
+REFERRAL_REFERRER_BONUS_ENERGY = 20
+
 
 def get_or_create_stats(user_id: int):
     cursor.execute(
@@ -217,8 +222,8 @@ async def cmd_referral(message: types.Message):
         "🎁 <b>REFERRAL PROGRAM</b>\n\n"
         f"👥 Your referrals: <b>{ref_count}</b>\n\n"
         "🎯 <b>Rewards:</b>\n"
-        "• Friend gets +100 protein bonus\n"
-        "• You get +50 protein per referral\n"
+        f"• Friend gets +{REFERRAL_FRIEND_BONUS_PROTEIN} protein bonus\n"
+        f"• You get +{REFERRAL_REFERRER_BONUS_PROTEIN} protein and +{REFERRAL_REFERRER_BONUS_ENERGY} energy per referral\n"
         "• Every 10 referrals = 1 RARE drop guaranteed!\n\n"
         f"🔗 Your link:\n<code>{ref_link}</code>\n\n"
         "Share with friends to earn more!"
@@ -453,19 +458,46 @@ async def cmd_start(message: types.Message):
                 existing = cursor.fetchone()
 
                 if existing is None or existing[0] is None:
+                    # Give friend their welcome protein bonus
                     cursor.execute(
-                        "INSERT OR REPLACE INTO users (user_id, protein, referrer_id) VALUES (?, 100, ?)",
-                        (user_id, referrer_id),
+                        "INSERT OR REPLACE INTO users (user_id, protein, referrer_id) VALUES (?, ?, ?)",
+                        (user_id, REFERRAL_FRIEND_BONUS_PROTEIN, referrer_id),
                     )
+                    # Track referral pair
                     cursor.execute(
                         "INSERT INTO referrals (referrer_id, referred_id) VALUES (?, ?)",
                         (referrer_id, user_id),
                     )
                     cursor.execute(
-                        "UPDATE users SET referral_count = referral_count + 1, protein = protein + 50 WHERE user_id = ?",
-                        (referrer_id,),
+                        """
+                        UPDATE users
+                        SET referral_count = referral_count + 1,
+                            protein = protein + ?,
+                            energy = CASE
+                                WHEN energy + ? > ? THEN ?
+                                ELSE energy + ?
+                            END
+                        WHERE user_id = ?
+                        """,
+                        (
+                            REFERRAL_REFERRER_BONUS_PROTEIN,
+                            REFERRAL_REFERRER_BONUS_ENERGY,
+                            MAX_ENERGY,
+                            MAX_ENERGY,
+                            REFERRAL_REFERRER_BONUS_ENERGY,
+                            referrer_id,
+                        ),
                     )
                     conn.commit()
+
+                    # Keep in-memory snapshot in sync if referrer is active
+                    if referrer_id in user_data:
+                        ref_user = get_user(referrer_id)
+                        ref_user["balance"] += REFERRAL_REFERRER_BONUS_PROTEIN
+                        ref_user["energy"] = min(
+                            MAX_ENERGY,
+                            ref_user.get("energy", MAX_ENERGY) + REFERRAL_REFERRER_BONUS_ENERGY,
+                        )
 
                     # Auto-add as friends
                     try:
@@ -485,7 +517,8 @@ async def cmd_start(message: types.Message):
                         ).fetchone()[0]
                         await bot.send_message(
                             referrer_id,
-                            f"🎉 New referral! +50 protein bonus!\nTotal referrals: {ref_count}",
+                            f"🎉 New referral! +{REFERRAL_REFERRER_BONUS_PROTEIN} protein and +{REFERRAL_REFERRER_BONUS_ENERGY} energy!\n"
+                            f"Total referrals: {ref_count}",
                         )
                     except Exception:
                         pass
