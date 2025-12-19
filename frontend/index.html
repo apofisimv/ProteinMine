@@ -271,11 +271,7 @@ async function loadUser(){
   if(!userId) return;
   
   try{
-    const res = await fetch(`${API_URL}/user/${userId}`, {
-      headers: {
-        'ngrok-skip-browser-warning': 'true',
-      },
-    });
+    const res = await fetch(`${API_URL}/user/${userId}`);
     const data = await res.json();
     
     d.protein = Number.isFinite(data.protein) ? data.protein : 0;
@@ -337,12 +333,7 @@ async function mine(){
   createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, '💎');
   
   try{
-    const res = await fetch(`${API_URL}/mine/${userId}`, {
-      method: 'POST',
-      headers: {
-        'ngrok-skip-browser-warning': 'true',
-      },
-    });
+    const res = await fetch(`${API_URL}/mine/${userId}`, {method: 'POST'});
     const result = await res.json();
     
     if(!result.success){
@@ -418,11 +409,7 @@ async function loadLeaderboard(){
   if(!userId) return;
   
   try{
-    const posRes = await fetch(`${API_URL}/user/position/${userId}`, {
-      headers: {
-        'ngrok-skip-browser-warning': 'true',
-      },
-    });
+    const posRes = await fetch(`${API_URL}/user/position/${userId}`);
     const posData = await posRes.json();
     document.getElementById('myPos').textContent = '#' + posData.position;
   }catch(e){
@@ -444,11 +431,7 @@ async function inviteFriend(){
   }
 
   try{
-    const res = await fetch(`${API_URL}/referral/${userId}`, {
-      headers: {
-        'ngrok-skip-browser-warning': 'true',
-      },
-    });
+    const res = await fetch(`${API_URL}/referral/${userId}`);
     const data = await res.json();
 
     if(!res.ok || !data.referral_link){
@@ -488,19 +471,11 @@ async function switchLeaderboard(type){
   
   try{
     if(type === 'global'){
-      const res = await fetch(`${API_URL}/leaderboard/global`, {
-        headers: {
-          'ngrok-skip-browser-warning': 'true',
-        },
-      });
+      const res = await fetch(`${API_URL}/leaderboard/global`);
       const data = await res.json();
       renderLeaderboard(data, 'global');
     }else if(type === 'friends'){
-      const res = await fetch(`${API_URL}/leaderboard/friends/${userId}`, {
-        headers: {
-          'ngrok-skip-browser-warning': 'true',
-        },
-      });
+      const res = await fetch(`${API_URL}/leaderboard/friends/${userId}`);
       const data = await res.json();
       
       if(data.length === 0){
@@ -510,11 +485,7 @@ async function switchLeaderboard(type){
       
       renderLeaderboard(data, 'friends');
     }else if(type === 'clans'){
-      const res = await fetch(`${API_URL}/clans`, {
-        headers: {
-          'ngrok-skip-browser-warning': 'true',
-        },
-      });
+      const res = await fetch(`${API_URL}/clans`);
       const data = await res.json();
       renderClanLeaderboard(data);
     }
@@ -585,11 +556,7 @@ async function initMap(){
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© OpenStreetMap'}).addTo(map);
   
   try{
-    const res = await fetch(`${API_URL}/clans`, {
-      headers: {
-        'ngrok-skip-browser-warning': 'true',
-      },
-    });
+    const res = await fetch(`${API_URL}/clans`);
     const clans = await res.json();
     
     let topClan = {name: 'None', protein: 0};
@@ -642,11 +609,7 @@ function updateTurkeySummary(){
 
 async function refreshTurkeyStats(){
   try{
-    const res = await fetch(`${API_URL}/turkey-stats`, {
-      headers: {
-        'ngrok-skip-browser-warning': 'true',
-      },
-    });
+    const res = await fetch(`${API_URL}/turkey-stats`);
     if(!res.ok){
       throw new Error('turkey-stats HTTP ' + res.status);
     }
@@ -760,10 +723,7 @@ async function sendUserTrack(){
   try{
     await fetch(`${API_URL}/user-track`, {
       method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'ngrok-skip-browser-warning':'true',
-      },
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         telegramId:userId,
         username:tgUser?.username || null,
