@@ -167,7 +167,16 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 </div>
 
 <script>
-const API_URL = '/api';
+// Base URL of the backend API.
+// - For local testing where frontend and backend are on the same host,
+//   you can keep it as '/api'.
+// - For production (e.g. Vercel frontend + VPS backend), set
+//   window.PROTEINMINE_API_URL *before* this script runs, for example:
+window.PROTEINMINE_API_URL = 'https://gigdem.vercel.app/api';
+</script>
+
+<script>
+const API_URL = window.PROTEINMINE_API_URL || '/api';
 let userId = null;
 let tgUser = null;
 let userLat = null;
