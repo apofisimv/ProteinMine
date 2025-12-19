@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import os
 import sqlite3
@@ -10,9 +10,10 @@ from dotenv import load_dotenv
 app = Flask(__name__)
 CORS(app)
 
-# Resolve DB path in a way that works both on local (Windows) and server (Linux)
+# Resolve paths in a way that works both on local (Windows) and server (Linux)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
+FRONTEND_DIR = os.path.join(ROOT_DIR, "frontend")
 
 # Load environment variables from a .env file at the project root (ProteinMine/.env)
 load_dotenv(os.path.join(ROOT_DIR, ".env"))
@@ -64,6 +65,11 @@ def init_stats_tables():
 
     conn.commit()
     conn.close()
+
+
+# Ensure stats tables exist as soon as the module is imported.
+# Flask 3 removed the before_first_request hook, so we call this eagerly.
+init_stats_tables()
 
 
 # Approximate coordinates of main Turkish cities / provinces
@@ -140,11 +146,14 @@ def detect_turkey_city(lat, lng):
     return None
 
 
-@app.before_first_request
-def _startup():
-    # Make sure our stats tables exist before any request hits
-    init_stats_tables()
-
+@app.route("/", methods=["GET"])
+def index():
+    """
+    Serve the Telegram WebApp frontend (ProteinMine/frontend/index.html)
+    from the same origin as the API so that /api/* calls work behind a
+    single ngrok tunnel (Option 1 setup).
+    """
+    return send_from_directory(FRONTEND_DIR, "index.html")
 
 @app.route("/api/user/<int:user_id>", methods=["GET"])
 def get_user(user_id):
@@ -605,6 +614,6 @@ def get_user_position(user_id):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=80, debug=False)
 
 
