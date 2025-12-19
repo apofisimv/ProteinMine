@@ -851,8 +851,16 @@ async def cmd_top(message: types.Message):
     await message.answer("\n".join(text), parse_mode="HTML")
 
 
-if __name__ == "__main__":
+def run_bot():
+    """
+    Start the Telegram bot polling.
+    Separated into a function so it can be started from another module (e.g. main.py).
+    """
     print("ProteinMine bot is running with ALL FEATURES...")
     executor.start_polling(dp, skip_updates=True)
+
+
+if __name__ == "__main__":
+    run_bot()
 
 
