@@ -1,4 +1,3 @@
-import os
 import threading
 
 from .api import run_api
@@ -11,19 +10,18 @@ def main():
     - Flask API (for the WebApp / REST endpoints)
     - Telegram bot (aiogram) via long polling
 
-    The bot runs in a background thread; the Flask app runs in the main thread.
+    The Flask API runs in a background thread, and the Telegram bot runs
+    in the main thread so aiogram can manage its asyncio event loop.
     """
-    # Start Telegram bot in a background (daemon) thread
-    bot_thread = threading.Thread(target=run_bot, name="telegram-bot", daemon=True)
-    bot_thread.start()
-
-    # Run Flask API (this will block until the process is stopped)
+    # Start Flask API in a background (daemon) thread
+    api_thread = threading.Thread(target=run_api, name="flask-api", daemon=True)
+    api_thread.start()
     print("Starting Flask API server...")
-    run_api()
+
+    # Run Telegram bot in the main thread (blocking)
+    print("Starting Telegram bot...")
+    run_bot()
 
 
 if __name__ == "__main__":
     main()
-
-
-
