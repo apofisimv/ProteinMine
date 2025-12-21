@@ -614,12 +614,7 @@ def get_user_position(user_id):
 
 
 def run_api():
-    """
-    Run the Flask API server.
-
-    - Uses PORT environment variable if set (Render, Railway, etc.).
-    - Defaults to port 8000 for local development.
-    """
+   
     port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port, debug=False)
 
