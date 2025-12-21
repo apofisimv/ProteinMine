@@ -106,10 +106,7 @@ def get_or_create_user_row(user_id: int):
     )
     row = cursor.fetchone()
     if row is None:
-        cursor.execute(
-            "INSERT INTO users (user_id, protein, energy, xp, level, last_daily, daily_streak) VALUES (?, 0, ?, 0, 1, NULL, 0)",
-            (user_id, MAX_ENERGY),
-        )
+        cursor.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
         conn.commit()
         return {
             "protein": 0,
@@ -462,19 +459,10 @@ async def cmd_start(message: types.Message):
 
                 if existing is None or existing[0] is None:
                     # Give friend their welcome protein bonus
-                    # Check if user exists first to decide between INSERT and UPDATE
-                    cursor.execute("SELECT user_id FROM users WHERE user_id = ?", (user_id,))
-                    user_exists = cursor.fetchone()
-                    if user_exists:
-                        cursor.execute(
-                            "UPDATE users SET protein = ?, referrer_id = ? WHERE user_id = ?",
-                            (REFERRAL_FRIEND_BONUS_PROTEIN, referrer_id, user_id),
-                        )
-                    else:
-                        cursor.execute(
-                            "INSERT INTO users (user_id, protein, energy, xp, level, referrer_id, last_daily, daily_streak) VALUES (?, ?, ?, 0, 1, ?, NULL, 0)",
-                            (user_id, REFERRAL_FRIEND_BONUS_PROTEIN, MAX_ENERGY, referrer_id),
-                        )
+                    cursor.execute(
+                        "INSERT OR REPLACE INTO users (user_id, protein, referrer_id) VALUES (?, ?, ?)",
+                        (user_id, REFERRAL_FRIEND_BONUS_PROTEIN, referrer_id),
+                    )
                     # Track referral pair
                     cursor.execute(
                         "INSERT INTO referrals (referrer_id, referred_id) VALUES (?, ?)",
@@ -611,10 +599,7 @@ async def cmd_daily(message: types.Message):
     row = cursor.fetchone()
 
     if row is None:
-        cursor.execute(
-            "INSERT INTO users (user_id, protein, energy, xp, level, last_daily, daily_streak) VALUES (?, 0, ?, 0, 1, NULL, 0)",
-            (user_id, MAX_ENERGY),
-        )
+        cursor.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
         conn.commit()
         balance = 0
         last_daily = None
