@@ -1,11 +1,11 @@
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import os
-import sqlite3
 import time
 import math
 
 from dotenv import load_dotenv
+from .db import db
 
 app = Flask(__name__)
 CORS(app)
@@ -18,58 +18,10 @@ FRONTEND_DIR = os.path.join(ROOT_DIR, "frontend")
 # Load environment variables from a .env file at the project root (ProteinMine/.env)
 load_dotenv(os.path.join(ROOT_DIR, ".env"))
 
-DEFAULT_DB_PATH = os.path.join(ROOT_DIR, "proteinmine.db")
-DB_PATH = os.getenv("PROTEINMINE_DB", DEFAULT_DB_PATH)
-
 MAX_ENERGY = 50
 ENERGY_REGEN_TIME = 30
 
-
-def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def init_stats_tables():
-    """
-    Ensure tables for the statistics / Turkey map exist.
-    This is safe to run on every start (CREATE TABLE IF NOT EXISTS).
-    """
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS user_track (
-            telegram_id INTEGER PRIMARY KEY,
-            username TEXT,
-            first_name TEXT,
-            last_name TEXT,
-            city TEXT,
-            lat REAL,
-            lng REAL,
-            points INTEGER DEFAULT 0,
-            last_seen INTEGER,
-            photo_url TEXT
-        )
-        """
-    )
-
-    # Backwards‑compat: add photo_url column if the table already existed
-    try:
-        cursor.execute("ALTER TABLE user_track ADD COLUMN photo_url TEXT")
-    except sqlite3.OperationalError:
-        # Column may already exist; ignore error
-        pass
-
-    conn.commit()
-    conn.close()
-
-
-# Ensure stats tables exist as soon as the module is imported.
-# Flask 3 removed the before_first_request hook, so we call this eagerly.
-init_stats_tables()
+# Database is initialized in db.py
 
 
 # Approximate coordinates of main Turkish cities / provinces
@@ -157,40 +109,37 @@ def index():
 
 @app.route("/api/user/<int:user_id>", methods=["GET"])
 def get_user(user_id):
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        SELECT protein, energy, xp, level 
-        FROM users 
-        WHERE user_id = ?
-    """,
-        (user_id,),
-    )
-
-    row = cursor.fetchone()
-    # Auto-create a user row if it doesn't exist yet (first time from WebApp)
-    if row is None:
-        # Explicitly set sane defaults instead of relying on DB defaults
-        cursor.execute(
-            """
-            INSERT INTO users (user_id, protein, energy, xp, level, last_daily, daily_streak)
-            VALUES (?, 0, ?, 0, 1, NULL, 0)
-            """,
-            (user_id, MAX_ENERGY),
-        )
-        conn.commit()
-        row = (0, MAX_ENERGY, 0, 1)
-
-    conn.close()
+    user = db.users.find_one({"user_id": user_id})
+    
+    # Auto-create a user if it doesn't exist yet (first time from WebApp)
+    if user is None:
+        user = {
+            "user_id": user_id,
+            "protein": 0,
+            "energy": MAX_ENERGY,
+            "xp": 0,
+            "level": 1,
+            "last_daily": None,
+            "daily_streak": 0,
+            "clan_id": None,
+            "clan_contribution": 0,
+            "referrer_id": None,
+            "referral_count": 0
+        }
+        db.users.insert_one(user)
+        protein, energy, xp, level = 0, MAX_ENERGY, 0, 1
+    else:
+        protein = user.get("protein", 0)
+        energy = user.get("energy", MAX_ENERGY)
+        xp = user.get("xp", 0)
+        level = user.get("level", 1)
 
     return jsonify(
         {
-            "protein": row[0],
-            "energy": row[1],
-            "xp": row[2],
-            "level": row[3],
+            "protein": protein,
+            "energy": energy,
+            "xp": xp,
+            "level": level,
             "maxEnergy": MAX_ENERGY,
         }
     )
@@ -248,67 +197,40 @@ def user_track():
     city = detect_turkey_city(lat, lng)
     now_ts = int(time.time())
 
-    conn = get_db()
-    cursor = conn.cursor()
-
     # Upsert by telegram_id; if it is NULL we just insert a new row each time
     if telegram_id is not None:
-        cursor.execute(
-            """
-            INSERT INTO user_track (
-                telegram_id, username, first_name, last_name,
-                city, lat, lng, points, last_seen, photo_url
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(telegram_id) DO UPDATE SET
-                username = excluded.username,
-                first_name = excluded.first_name,
-                last_name = excluded.last_name,
-                city = excluded.city,
-                lat = excluded.lat,
-                lng = excluded.lng,
-                points = excluded.points,
-                last_seen = excluded.last_seen,
-                photo_url = excluded.photo_url
-            """,
-            (
-                telegram_id,
-                username,
-                first_name,
-                last_name,
-                city,
-                float(lat) if lat is not None else None,
-                float(lng) if lng is not None else None,
-                points,
-                now_ts,
-                photo_url,
-            ),
+        db.user_track.update_one(
+            {"telegram_id": telegram_id},
+            {
+                "$set": {
+                    "telegram_id": telegram_id,
+                    "username": username,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "city": city,
+                    "lat": float(lat) if lat is not None else None,
+                    "lng": float(lng) if lng is not None else None,
+                    "points": points,
+                    "last_seen": now_ts,
+                    "photo_url": photo_url
+                }
+            },
+            upsert=True
         )
     else:
-        cursor.execute(
-            """
-            INSERT INTO user_track (
-                telegram_id, username, first_name, last_name,
-                city, lat, lng, points, last_seen, photo_url
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                None,
-                username,
-                first_name,
-                last_name,
-                city,
-                float(lat) if lat is not None else None,
-                float(lng) if lng is not None else None,
-                points,
-                now_ts,
-                photo_url,
-            ),
-        )
-
-    conn.commit()
-    conn.close()
+        # Insert new document without telegram_id
+        db.user_track.insert_one({
+            "telegram_id": None,
+            "username": username,
+            "first_name": first_name,
+            "last_name": last_name,
+            "city": city,
+            "lat": float(lat) if lat is not None else None,
+            "lng": float(lng) if lng is not None else None,
+            "points": points,
+            "last_seen": now_ts,
+            "photo_url": photo_url
+        })
 
     return jsonify(
         {
@@ -321,35 +243,32 @@ def user_track():
 
 @app.route("/api/mine/<int:user_id>", methods=["POST"])
 def mine(user_id):
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        SELECT protein, energy, xp, level 
-        FROM users 
-        WHERE user_id = ?
-    """,
-        (user_id,),
-    )
-
-    row = cursor.fetchone()
+    user = db.users.find_one({"user_id": user_id})
+    
     # Auto-create user if they don't exist yet (first time mining from WebApp)
-    if row is None:
-        cursor.execute(
-            """
-            INSERT INTO users (user_id, protein, energy, xp, level, last_daily, daily_streak)
-            VALUES (?, 0, ?, 0, 1, NULL, 0)
-            """,
-            (user_id, MAX_ENERGY),
-        )
-        conn.commit()
-        row = (0, MAX_ENERGY, 0, 1)
-
-    protein, energy, xp, level = row
+    if user is None:
+        user = {
+            "user_id": user_id,
+            "protein": 0,
+            "energy": MAX_ENERGY,
+            "xp": 0,
+            "level": 1,
+            "last_daily": None,
+            "daily_streak": 0,
+            "clan_id": None,
+            "clan_contribution": 0,
+            "referrer_id": None,
+            "referral_count": 0
+        }
+        db.users.insert_one(user)
+        protein, energy, xp, level = 0, MAX_ENERGY, 0, 1
+    else:
+        protein = user.get("protein", 0)
+        energy = user.get("energy", MAX_ENERGY)
+        xp = user.get("xp", 0)
+        level = user.get("level", 1)
 
     if energy <= 0:
-        conn.close()
         return jsonify({"error": "No energy"}), 400
 
     import random
@@ -386,33 +305,29 @@ def mine(user_id):
         xp = 0
         levelup = True
 
-    cursor.execute(
-        """
-        UPDATE users 
-        SET protein = ?, energy = ?, xp = ?, level = ?
-        WHERE user_id = ?
-    """,
-        (protein, energy, xp, level, user_id),
+    db.users.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "protein": protein,
+                "energy": energy,
+                "xp": xp,
+                "level": level
+            }
+        }
     )
 
-    conn.commit()
-
-    cursor.execute("SELECT clan_id FROM users WHERE user_id = ?", (user_id,))
-    clan_row = cursor.fetchone()
-
-    if clan_row and clan_row[0]:
-        clan_id = clan_row[0]
-        cursor.execute(
-            "UPDATE users SET clan_contribution = clan_contribution + ? WHERE user_id = ?",
-            (gained, user_id),
+    # Update clan contribution
+    if user.get("clan_id"):
+        clan_id = user["clan_id"]
+        db.users.update_one(
+            {"user_id": user_id},
+            {"$inc": {"clan_contribution": gained}}
         )
-        cursor.execute(
-            "UPDATE clans SET total_protein = total_protein + ? WHERE id = ?",
-            (gained, clan_id),
+        db.clans.update_one(
+            {"id": clan_id},
+            {"$inc": {"total_protein": gained}}
         )
-        conn.commit()
-
-    conn.close()
 
     return jsonify(
         {
@@ -443,29 +358,26 @@ def turkey_stats():
       ]
     }
     """
-    conn = get_db()
-    cursor = conn.cursor()
+    # Use MongoDB aggregation pipeline
+    pipeline = [
+        {"$match": {"city": {"$ne": None, "$ne": ""}}},
+        {
+            "$group": {
+                "_id": "$city",
+                "users": {"$sum": 1},
+                "total_points": {"$sum": "$points"}
+            }
+        },
+        {"$sort": {"total_points": -1}}
+    ]
 
-    cursor.execute(
-        """
-        SELECT city,
-               COUNT(*) AS users,
-               COALESCE(SUM(points), 0) AS total_points
-        FROM user_track
-        WHERE city IS NOT NULL AND city != ''
-        GROUP BY city
-        ORDER BY total_points DESC
-        """
-    )
-
-    rows = cursor.fetchall()
-    conn.close()
+    results = db.user_track.aggregate(pipeline)
 
     city_stats = []
-    for row in rows:
-        city_name = row[0]
-        users = row[1] or 0
-        total_points = row[2] or 0
+    for result in results:
+        city_name = result["_id"]
+        users = result.get("users", 0)
+        total_points = result.get("total_points", 0)
         if not city_name:
             continue
         city_stats.append(
@@ -481,28 +393,16 @@ def turkey_stats():
 
 @app.route("/api/clans", methods=["GET"])
 def get_clans():
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        SELECT id, name, total_protein, members_count 
-        FROM clans 
-        ORDER BY total_protein DESC
-    """
-    )
-
-    rows = cursor.fetchall()
-    conn.close()
+    clans_docs = list(db.clans.find().sort("total_protein", -1))
 
     clans = []
-    for row in rows:
+    for clan in clans_docs:
         clans.append(
             {
-                "id": row[0],
-                "name": row[1],
-                "total_protein": row[2],
-                "members_count": row[3],
+                "id": clan.get("id"),
+                "name": clan.get("name", ""),
+                "total_protein": clan.get("total_protein", 0),
+                "members_count": clan.get("members_count", 0),
             }
         )
 
@@ -511,38 +411,28 @@ def get_clans():
 
 @app.route("/api/leaderboard/global", methods=["GET"])
 def get_global_leaderboard():
-    conn = get_db()
-    cursor = conn.cursor()
+    # Get top users sorted by protein
+    users = list(db.users.find().sort("protein", -1).limit(50))
 
-    cursor.execute(
-        """
-        SELECT u.user_id,
-               u.protein,
-               u.level,
-               u.xp,
-               ut.username,
-               ut.photo_url
-        FROM   users AS u
-        LEFT JOIN user_track AS ut
-               ON ut.telegram_id = u.user_id
-        ORDER BY u.protein DESC
-        LIMIT 50
-    """
-    )
-
-    rows = cursor.fetchall()
-    conn.close()
+    # Get user_track data for these users
+    user_ids = [u["user_id"] for u in users]
+    user_tracks = {
+        track["telegram_id"]: track
+        for track in db.user_track.find({"telegram_id": {"$in": user_ids}})
+    }
 
     leaderboard = []
-    for row in rows:
+    for user in users:
+        user_id = user["user_id"]
+        track = user_tracks.get(user_id, {})
         leaderboard.append(
             {
-                "user_id": row[0],
-                "protein": row[1],
-                "level": row[2],
-                "xp": row[3],
-                "username": row[4],
-                "avatar_url": row[5],
+                "user_id": user_id,
+                "protein": user.get("protein", 0),
+                "level": user.get("level", 1),
+                "xp": user.get("xp", 0),
+                "username": track.get("username"),
+                "avatar_url": track.get("photo_url"),
             }
         )
 
@@ -551,42 +441,34 @@ def get_global_leaderboard():
 
 @app.route("/api/leaderboard/friends/<int:user_id>", methods=["GET"])
 def get_friends_leaderboard(user_id):
-    conn = get_db()
-    cursor = conn.cursor()
+    # Get friend IDs
+    friendships = list(db.friendships.find({"user_id": user_id}).limit(20))
+    friend_ids = [f["friend_id"] for f in friendships]
 
-    cursor.execute(
-        """
-        SELECT u.user_id,
-               u.protein,
-               u.level,
-               u.xp,
-               ut.username,
-               ut.photo_url
-        FROM   friendships AS f
-        JOIN   users AS u
-               ON f.friend_id = u.user_id
-        LEFT JOIN user_track AS ut
-               ON ut.telegram_id = u.user_id
-        WHERE  f.user_id = ?
-        ORDER BY u.protein DESC
-        LIMIT 20
-    """,
-        (user_id,),
-    )
+    if not friend_ids:
+        return jsonify([])
 
-    rows = cursor.fetchall()
-    conn.close()
+    # Get users data
+    users = list(db.users.find({"user_id": {"$in": friend_ids}}).sort("protein", -1).limit(20))
+
+    # Get user_track data
+    user_tracks = {
+        track["telegram_id"]: track
+        for track in db.user_track.find({"telegram_id": {"$in": friend_ids}})
+    }
 
     friends = []
-    for row in rows:
+    for user in users:
+        user_id_friend = user["user_id"]
+        track = user_tracks.get(user_id_friend, {})
         friends.append(
             {
-                "user_id": row[0],
-                "protein": row[1],
-                "level": row[2],
-                "xp": row[3],
-                "username": row[4],
-                "avatar_url": row[5],
+                "user_id": user_id_friend,
+                "protein": user.get("protein", 0),
+                "level": user.get("level", 1),
+                "xp": user.get("xp", 0),
+                "username": track.get("username"),
+                "avatar_url": track.get("photo_url"),
             }
         )
 
@@ -595,20 +477,17 @@ def get_friends_leaderboard(user_id):
 
 @app.route("/api/user/position/<int:user_id>", methods=["GET"])
 def get_user_position(user_id):
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        SELECT COUNT(*) + 1
-        FROM users
-        WHERE protein > (SELECT protein FROM users WHERE user_id = ?)
-    """,
-        (user_id,),
-    )
-
-    position = cursor.fetchone()[0]
-    conn.close()
+    user = db.users.find_one({"user_id": user_id})
+    
+    if user is None:
+        # If user doesn't exist, count all users + 1
+        total_users = db.users.count_documents({})
+        return jsonify({"position": total_users + 1})
+    
+    user_protein = user.get("protein", 0)
+    
+    # Count users with more protein + 1
+    position = db.users.count_documents({"protein": {"$gt": user_protein}}) + 1
 
     return jsonify({"position": position})
 

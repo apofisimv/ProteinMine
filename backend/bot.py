@@ -1,64 +1,20 @@
 import os
 import random
 import time
-import sqlite3
 from datetime import datetime
 
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-# Database connection (use path relative to project root, configurable via env)
+# Load environment variables
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
-
-# Load environment variables from a .env file at the project root (ProteinMine/.env)
 load_dotenv(os.path.join(ROOT_DIR, ".env"))
 
-DEFAULT_DB_PATH = os.path.join(ROOT_DIR, "proteinmine.db")
-DB_PATH = os.getenv("PROTEINMINE_DB", DEFAULT_DB_PATH)
-conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-cursor = conn.cursor()
+from .db import db
 
-
-def init_db():
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS users (
-            user_id INTEGER PRIMARY KEY,
-            protein INTEGER DEFAULT 0,
-            energy INTEGER DEFAULT 50,
-            xp INTEGER DEFAULT 0,
-            level INTEGER DEFAULT 1,
-            last_daily TEXT DEFAULT NULL,
-            daily_streak INTEGER DEFAULT 0
-        )
-        """
-    )
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS drops (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            drop_type TEXT NOT NULL,
-            value INTEGER,
-            timestamp TEXT DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-    )
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS stats (
-            user_id INTEGER PRIMARY KEY,
-            total_clicks INTEGER DEFAULT 0,
-            rare_drops INTEGER DEFAULT 0,
-            best_combo INTEGER DEFAULT 0
-        )
-        """
-    )
-    conn.commit()
-
-init_db()
+# Database is initialized in db.py
 API_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 if not API_TOKEN:
     raise RuntimeError("TELEGRAM_BOT_TOKEN is not set")
@@ -84,30 +40,40 @@ REFERRAL_REFERRER_BONUS_ENERGY = 20
 
 
 def get_or_create_stats(user_id: int):
-    cursor.execute(
-        "SELECT total_clicks, rare_drops, best_combo FROM stats WHERE user_id = ?",
-        (user_id,),
-    )
-    row = cursor.fetchone()
-    if row is None:
-        cursor.execute(
-            "INSERT INTO stats (user_id, total_clicks, rare_drops, best_combo) VALUES (?, 0, 0, 0)",
-            (user_id,),
-        )
-        conn.commit()
+    stats = db.stats.find_one({"user_id": user_id})
+    if stats is None:
+        stats = {
+            "user_id": user_id,
+            "total_clicks": 0,
+            "rare_drops": 0,
+            "best_combo": 0
+        }
+        db.stats.insert_one(stats)
         return {"total_clicks": 0, "rare_drops": 0, "best_combo": 0}
-    return {"total_clicks": row[0], "rare_drops": row[1], "best_combo": row[2]}
+    return {
+        "total_clicks": stats.get("total_clicks", 0),
+        "rare_drops": stats.get("rare_drops", 0),
+        "best_combo": stats.get("best_combo", 0)
+    }
 
 
 def get_or_create_user_row(user_id: int):
-    cursor.execute(
-        "SELECT protein, energy, xp, level, last_daily, daily_streak FROM users WHERE user_id = ?",
-        (user_id,),
-    )
-    row = cursor.fetchone()
-    if row is None:
-        cursor.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
-        conn.commit()
+    user = db.users.find_one({"user_id": user_id})
+    if user is None:
+        user = {
+            "user_id": user_id,
+            "protein": 0,
+            "energy": MAX_ENERGY,
+            "xp": 0,
+            "level": 1,
+            "last_daily": None,
+            "daily_streak": 0,
+            "clan_id": None,
+            "clan_contribution": 0,
+            "referrer_id": None,
+            "referral_count": 0
+        }
+        db.users.insert_one(user)
         return {
             "protein": 0,
             "energy": MAX_ENERGY,
@@ -117,54 +83,65 @@ def get_or_create_user_row(user_id: int):
             "daily_streak": 0,
         }
     return {
-        "protein": row[0],
-        "energy": row[1],
-        "xp": row[2],
-        "level": row[3],
-        "last_daily": row[4],
-        "daily_streak": row[5],
+        "protein": user.get("protein", 0),
+        "energy": user.get("energy", MAX_ENERGY),
+        "xp": user.get("xp", 0),
+        "level": user.get("level", 1),
+        "last_daily": user.get("last_daily"),
+        "daily_streak": user.get("daily_streak", 0),
     }
 
 
 def save_user_to_db(user_id: int, user_dict: dict):
-    cursor.execute(
-        "UPDATE users SET protein = ?, energy = ?, xp = ?, level = ? WHERE user_id = ?",
-        (user_dict["balance"], user_dict["energy"], user_dict["xp"], user_dict["level"], user_id),
+    db.users.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "protein": user_dict["balance"],
+                "energy": user_dict["energy"],
+                "xp": user_dict["xp"],
+                "level": user_dict["level"]
+            }
+        }
     )
-    conn.commit()
 
 
 def save_daily_info(user_id: int, last_daily: str, daily_streak: int, balance: int):
-    cursor.execute(
-        "UPDATE users SET last_daily = ?, daily_streak = ?, protein = ? WHERE user_id = ?",
-        (last_daily, daily_streak, balance, user_id),
+    db.users.update_one(
+        {"user_id": user_id},
+        {
+            "$set": {
+                "last_daily": last_daily,
+                "daily_streak": daily_streak,
+                "protein": balance
+            }
+        }
     )
-    conn.commit()
 
 
 def add_drop(user_id: int, drop_type: str, value: int | None):
-    cursor.execute(
-        "INSERT INTO drops (user_id, drop_type, value) VALUES (?, ?, ?)",
-        (user_id, drop_type, value),
-    )
-    conn.commit()
+    from datetime import datetime
+    db.drops.insert_one({
+        "user_id": user_id,
+        "drop_type": drop_type,
+        "value": value,
+        "timestamp": datetime.utcnow().isoformat()
+    })
     stats = get_or_create_stats(user_id)
     stats["rare_drops"] += 1
-    cursor.execute(
-        "UPDATE stats SET rare_drops = ? WHERE user_id = ?",
-        (stats["rare_drops"], user_id),
+    db.stats.update_one(
+        {"user_id": user_id},
+        {"$set": {"rare_drops": stats["rare_drops"]}}
     )
-    conn.commit()
 
 
 def inc_click(user_id: int):
     stats = get_or_create_stats(user_id)
     stats["total_clicks"] += 1
-    cursor.execute(
-        "UPDATE stats SET total_clicks = ? WHERE user_id = ?",
-        (stats["total_clicks"], user_id),
+    db.stats.update_one(
+        {"user_id": user_id},
+        {"$set": {"total_clicks": stats["total_clicks"]}}
     )
-    conn.commit()
 
 
 def get_user(user_id: int):
@@ -199,7 +176,7 @@ def regenerate_energy(user: dict):
         user["last_energy_ts"] = now
 
 
-BTN_MINE = "🚀 Mine"
+BTN_MINE = "💎 Focus"
 BTN_BOOST = "⚡ Boost"
 keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
 keyboard.add(KeyboardButton(BTN_MINE), KeyboardButton(BTN_BOOST))
@@ -213,17 +190,16 @@ keyboard.add(KeyboardButton(BTN_MINE), KeyboardButton(BTN_BOOST))
 @dp.message_handler(commands=["referral", "ref"])
 async def cmd_referral(message: types.Message):
     user_id = message.from_user.id
-    cursor.execute("SELECT referral_count FROM users WHERE user_id = ?", (user_id,))
-    row = cursor.fetchone()
-    ref_count = row[0] if row else 0
+    user = db.users.find_one({"user_id": user_id})
+    ref_count = user.get("referral_count", 0) if user else 0
     bot_username = (await bot.me).username
     ref_link = f"https://t.me/{bot_username}?start=ref{user_id}"
     text = (
         "🎁 <b>REFERRAL PROGRAM</b>\n\n"
         f"👥 Your referrals: <b>{ref_count}</b>\n\n"
         "🎯 <b>Rewards:</b>\n"
-        f"• Friend gets +{REFERRAL_FRIEND_BONUS_PROTEIN} protein bonus\n"
-        f"• You get +{REFERRAL_REFERRER_BONUS_PROTEIN} protein and +{REFERRAL_REFERRER_BONUS_ENERGY} energy per referral\n"
+        f"• Friend gets +{REFERRAL_FRIEND_BONUS_PROTEIN} attention bonus\n"
+        f"• You get +{REFERRAL_REFERRER_BONUS_PROTEIN} attention and +{REFERRAL_REFERRER_BONUS_ENERGY} desire per referral\n"
         "• Every 10 referrals = 1 RARE drop guaranteed!\n\n"
         f"🔗 Your link:\n<code>{ref_link}</code>\n\n"
         "Share with friends to earn more!"
@@ -240,87 +216,84 @@ async def cmd_referral(message: types.Message):
 async def cmd_friends(message: types.Message):
     user_id = message.from_user.id
 
-    cursor.execute(
-        """
-        SELECT u.user_id, u.protein, u.level, u.xp
-        FROM friendships f
-        JOIN users u ON (f.friend_id = u.user_id)
-        WHERE f.user_id = ?
-        ORDER BY u.protein DESC
-        LIMIT 10
-    """,
-        (user_id,),
-    )
+    friendships = db.friendships.find({"user_id": user_id}).limit(10)
+    friend_ids = [f["friend_id"] for f in friendships]
 
-    friends = cursor.fetchall()
-
-    if not friends:
+    if not friend_ids:
         await message.answer(
-            "👥 <b>FRIENDS LEADERBOARD</b>\n\n"
-            "You have no friends added yet!\n\n"
-            "Invite friends with /referral and they'll automatically appear here.",
+            "👥 <b>WHO SHE NOTICES</b>\n\n"
+            "You have no friends added yet.\n\n"
+            "Bring someone who would like her.",
             parse_mode="HTML",
         )
         return
 
-    cursor.execute("SELECT protein, level FROM users WHERE user_id = ?", (user_id,))
-    my_data = cursor.fetchone()
-    my_protein = my_data[0] if my_data else 0
+    friends = list(db.users.find(
+        {"user_id": {"$in": friend_ids}}
+    ).sort("protein", -1).limit(10))
+
+    my_user = db.users.find_one({"user_id": user_id})
+    my_protein = my_user.get("protein", 0) if my_user else 0
 
     text = ["👥 <b>FRIENDS LEADERBOARD</b>\n"]
 
-    for i, (fid, protein, level, xp) in enumerate(friends, start=1):
+    for i, friend in enumerate(friends, start=1):
+        fid = friend["user_id"]
+        protein = friend.get("protein", 0)
+        level = friend.get("level", 1)
+        xp = friend.get("xp", 0)
+        
         try:
-            friend = await bot.get_chat(fid)
-            name = friend.first_name
+            friend_chat = await bot.get_chat(fid)
+            name = friend_chat.first_name
         except Exception:
             name = f"User {fid}"
 
         medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
 
         if fid == user_id:
-            text.append(f"{medal} <b>YOU</b> - {protein} 🧬 (Lv {level})")
+            text.append(f"{medal} <b>■ YOU</b> - {protein} ATT (Trust Lv {level})")
         else:
             diff = my_protein - protein
             if diff > 0:
                 text.append(
-                    f"{medal} {name} - {protein} 🧬 (🔻 {diff} behind you)"
+                    f"{medal} ■ {name} - {protein} ATT (🔻 {diff} behind you)"
                 )
             elif diff < 0:
                 text.append(
-                    f"{medal} {name} - {protein} 🧬 (🔺 {abs(diff)} ahead)"
+                    f"{medal} ■ {name} - {protein} ATT (🔺 {abs(diff)} ahead)"
                 )
             else:
-                text.append(f"{medal} {name} - {protein} 🧬")
+                text.append(f"{medal} ■ {name} - {protein} ATT")
 
-    text.append("\n\n💡 Invite more friends to compete!")
+    text.append("\n\n💡 Bring someone who would like her.")
     await message.answer("\n".join(text), parse_mode="HTML")
 
 
 @dp.message_handler(commands=["addfriend"])
 async def cmd_add_friend(message: types.Message):
     user_id = message.from_user.id
-    cursor.execute(
-        "SELECT referred_id FROM referrals WHERE referrer_id = ?", (user_id,)
-    )
-    referrals = cursor.fetchall()
+    referrals = db.referrals.find({"referrer_id": user_id})
     added = 0
 
-    for (friend_id,) in referrals:
+    for ref in referrals:
         try:
-            cursor.execute(
-                "INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?, ?)",
-                (user_id, friend_id),
+            friend_id = ref["referred_id"]
+            # Use update_one with upsert to avoid duplicates
+            db.friendships.update_one(
+                {"user_id": user_id, "friend_id": friend_id},
+                {"$set": {"user_id": user_id, "friend_id": friend_id}},
+                upsert=True
             )
-            cursor.execute(
-                "INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?, ?)",
-                (friend_id, user_id),
+            db.friendships.update_one(
+                {"user_id": friend_id, "friend_id": user_id},
+                {"$set": {"user_id": friend_id, "friend_id": user_id}},
+                upsert=True
             )
             added += 1
         except Exception:
             pass
 
-    conn.commit()
     await message.answer(
         f"✅ Added {added} friends from your referrals!\nUse /friends to see leaderboard."
     )
@@ -335,29 +308,21 @@ async def cmd_add_friend(message: types.Message):
 async def cmd_clan(message: types.Message):
     user_id = message.from_user.id
 
-    cursor.execute(
-        "SELECT clan_id, clan_contribution FROM users WHERE user_id = ?",
-        (user_id,),
-    )
-    row = cursor.fetchone()
+    user = db.users.find_one({"user_id": user_id})
+    
+    if user and user.get("clan_id"):
+        clan_id = user["clan_id"]
+        contribution = user.get("clan_contribution", 0)
 
-    if row and row[0]:
-        clan_id = row[0]
-        contribution = row[1]
-
-        cursor.execute(
-            "SELECT name, total_protein, members_count FROM clans WHERE id = ?",
-            (clan_id,),
-        )
-        clan = cursor.fetchone()
+        clan = db.clans.find_one({"id": clan_id})
 
         if clan:
             text = (
-                f"🏰 <b>Your Clan: {clan[0]}</b>\n\n"
-                f"🧬 Total Protein: <b>{clan[1]}</b>\n"
-                f"👥 Members: <b>{clan[2]}</b>\n"
+                f"💫 <b>Your Private Circle: {clan['name']}</b>\n\n"
+                f"🧬 Total Attention: <b>{clan.get('total_protein', 0)}</b>\n"
+                f"👥 Members: <b>{clan.get('members_count', 0)}</b>\n"
                 f"🎯 Your Contribution: <b>{contribution}</b>\n\n"
-                "Use /clan_top to see clan leaderboard!"
+                "Use /clan_top to see circle leaderboard!"
             )
             await message.answer(text, parse_mode="HTML")
     else:
@@ -375,9 +340,9 @@ async def cmd_clan(message: types.Message):
         kb.add(InlineKeyboardButton("🏙️ Bursa", callback_data="clan:5"))
 
         await message.answer(
-            "🏰 <b>Choose Your Clan!</b>\n\n"
-            "Join one of the Turkish clans and compete for glory!\n"
-            "Your mining will contribute to your clan's total.",
+            "💫 <b>Choose Your Private Circle</b>\n\n"
+            "Join a small group. Closer feeling.\n"
+            "Your focus will contribute to your circle's total.",
             reply_markup=kb,
             parse_mode="HTML",
         )
@@ -388,29 +353,28 @@ async def process_clan_choice(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
     clan_id = int(callback_query.data.split(":")[1])
 
-    cursor.execute("SELECT clan_id FROM users WHERE user_id = ?", (user_id,))
-    row = cursor.fetchone()
+    user = db.users.find_one({"user_id": user_id})
 
-    if row and row[0]:
+    if user and user.get("clan_id"):
         await callback_query.answer("You already have a clan!", show_alert=True)
         return
 
-    cursor.execute(
-        "UPDATE users SET clan_id = ? WHERE user_id = ?", (clan_id, user_id)
+    db.users.update_one(
+        {"user_id": user_id},
+        {"$set": {"clan_id": clan_id}}
     )
-    cursor.execute(
-        "UPDATE clans SET members_count = members_count + 1 WHERE id = ?",
-        (clan_id,),
+    db.clans.update_one(
+        {"id": clan_id},
+        {"$inc": {"members_count": 1}}
     )
-    conn.commit()
 
-    cursor.execute("SELECT name FROM clans WHERE id = ?", (clan_id,))
-    clan_name = cursor.fetchone()[0]
+    clan = db.clans.find_one({"id": clan_id})
+    clan_name = clan["name"] if clan else f"Clan {clan_id}"
 
     await callback_query.message.edit_text(
         f"🎉 Welcome to <b>{clan_name}</b>!\n\n"
-        "Your mining now contributes to your clan.\n"
-        "Use /clan to see clan info!",
+        "Your focus now contributes to your circle.\n"
+        "Use /clan to see circle info!",
         parse_mode="HTML",
     )
     await callback_query.answer()
@@ -418,22 +382,22 @@ async def process_clan_choice(callback_query: types.CallbackQuery):
 
 @dp.message_handler(commands=["clan_top", "clans"])
 async def cmd_clan_top(message: types.Message):
-    cursor.execute(
-        "SELECT name, total_protein, members_count FROM clans ORDER BY total_protein DESC LIMIT 10"
-    )
-    rows = cursor.fetchall()
+    clans = list(db.clans.find().sort("total_protein", -1).limit(10))
 
-    if not rows:
+    if not clans:
         await message.answer("No clans yet.")
         return
 
-    text = ["🏆 <b>CLAN LEADERBOARD</b>\n"]
+    text = ["💫 <b>PRIVATE CIRCLES LEADERBOARD</b>\n"]
     medals = ["🥇", "🥈", "🥉"]
 
-    for i, (name, protein, members) in enumerate(rows, start=1):
+    for i, clan in enumerate(clans, start=1):
+        name = clan.get("name", f"Clan {clan.get('id')}")
+        protein = clan.get("total_protein", 0)
+        members = clan.get("members_count", 0)
         medal = medals[i - 1] if i <= 3 else f"{i}."
         text.append(f"{medal} <b>{name}</b>")
-        text.append(f"   🧬 {protein:,} protein | 👥 {members} members\n")
+        text.append(f"   🧬 {protein:,} attention | 👥 {members} members\n")
 
     await message.answer("\n".join(text), parse_mode="HTML")
 
@@ -448,47 +412,77 @@ async def cmd_start(message: types.Message):
     user_id = message.from_user.id
     args = message.get_args()
 
+    # Ensure user is registered in database
+    existing_user = db.users.find_one({"user_id": user_id})
+    is_new_user = existing_user is None
+    
+    if is_new_user:
+        # Register new user with default values
+        db.users.insert_one({
+            "user_id": user_id,
+            "protein": 0,
+            "energy": MAX_ENERGY,
+            "xp": 0,
+            "level": 1,
+            "last_daily": None,
+            "daily_streak": 0,
+            "clan_id": None,
+            "clan_contribution": 0,
+            "referrer_id": None,
+            "referral_count": 0
+        })
+        # Also initialize stats
+        db.stats.insert_one({
+            "user_id": user_id,
+            "total_clicks": 0,
+            "rare_drops": 0,
+            "best_combo": 0
+        })
+        # Refresh existing_user after insert
+        existing_user = db.users.find_one({"user_id": user_id})
+    
     if args and args.startswith("ref"):
         try:
             referrer_id = int(args[3:])
             if referrer_id != user_id:
-                cursor.execute(
-                    "SELECT referrer_id FROM users WHERE user_id = ?", (user_id,)
-                )
-                existing = cursor.fetchone()
-
-                if existing is None or existing[0] is None:
+                # Check if user already has a referrer (can only be referred once)
+                if existing_user is None or existing_user.get("referrer_id") is None:
                     # Give friend their welcome protein bonus
-                    cursor.execute(
-                        "INSERT OR REPLACE INTO users (user_id, protein, referrer_id) VALUES (?, ?, ?)",
-                        (user_id, REFERRAL_FRIEND_BONUS_PROTEIN, referrer_id),
+                    db.users.update_one(
+                        {"user_id": user_id},
+                        {
+                            "$set": {
+                                "protein": REFERRAL_FRIEND_BONUS_PROTEIN,
+                                "referrer_id": referrer_id
+                            }
+                        },
+                        upsert=True
                     )
                     # Track referral pair
-                    cursor.execute(
-                        "INSERT INTO referrals (referrer_id, referred_id) VALUES (?, ?)",
-                        (referrer_id, user_id),
+                    db.referrals.update_one(
+                        {"referrer_id": referrer_id, "referred_id": user_id},
+                        {"$set": {"referrer_id": referrer_id, "referred_id": user_id}},
+                        upsert=True
                     )
-                    cursor.execute(
-                        """
-                        UPDATE users
-                        SET referral_count = referral_count + 1,
-                            protein = protein + ?,
-                            energy = CASE
-                                WHEN energy + ? > ? THEN ?
-                                ELSE energy + ?
-                            END
-                        WHERE user_id = ?
-                        """,
-                        (
-                            REFERRAL_REFERRER_BONUS_PROTEIN,
-                            REFERRAL_REFERRER_BONUS_ENERGY,
-                            MAX_ENERGY,
-                            MAX_ENERGY,
-                            REFERRAL_REFERRER_BONUS_ENERGY,
-                            referrer_id,
-                        ),
+                    
+                    # Update referrer's stats
+                    referrer = db.users.find_one({"user_id": referrer_id})
+                    new_protein = (referrer.get("protein", 0) if referrer else 0) + REFERRAL_REFERRER_BONUS_PROTEIN
+                    current_energy = referrer.get("energy", MAX_ENERGY) if referrer else MAX_ENERGY
+                    new_energy = min(MAX_ENERGY, current_energy + REFERRAL_REFERRER_BONUS_ENERGY)
+                    new_ref_count = (referrer.get("referral_count", 0) if referrer else 0) + 1
+                    
+                    db.users.update_one(
+                        {"user_id": referrer_id},
+                        {
+                            "$set": {
+                                "protein": new_protein,
+                                "energy": new_energy,
+                                "referral_count": new_ref_count
+                            }
+                        },
+                        upsert=True
                     )
-                    conn.commit()
 
                     # Keep in-memory snapshot in sync if referrer is active
                     if referrer_id in user_data:
@@ -501,30 +495,27 @@ async def cmd_start(message: types.Message):
 
                     # Auto-add as friends
                     try:
-                        cursor.execute(
-                            "INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?, ?)",
-                            (referrer_id, user_id),
+                        db.friendships.update_one(
+                            {"user_id": referrer_id, "friend_id": user_id},
+                            {"$set": {"user_id": referrer_id, "friend_id": user_id}},
+                            upsert=True
                         )
-                            
-                        conn.commit()
                     except Exception:
                         pass
 
                     try:
-                        ref_count = cursor.execute(
-                            "SELECT referral_count FROM users WHERE user_id = ?",
-                            (referrer_id,),
-                        ).fetchone()[0]
+                        updated_referrer = db.users.find_one({"user_id": referrer_id})
+                        ref_count = updated_referrer.get("referral_count", 0) if updated_referrer else 0
                         await bot.send_message(
                             referrer_id,
-                            f"🎉 New referral! +{REFERRAL_REFERRER_BONUS_PROTEIN} protein and +{REFERRAL_REFERRER_BONUS_ENERGY} energy!\n"
+                            f"🎉 New referral! +{REFERRAL_REFERRER_BONUS_PROTEIN} attention and +{REFERRAL_REFERRER_BONUS_ENERGY} desire!\n"
                             f"Total referrals: {ref_count}",
                         )
                     except Exception:
                         pass
 
                     await message.answer(
-                        "🎁 Welcome! You got +100 protein bonus from referral!\nStart mining now! 🚀",
+                        "🎁 Welcome! You got +100 attention bonus from referral!\nStart focusing now! 💎",
                         parse_mode="HTML",
                     )
         except Exception:
@@ -541,7 +532,7 @@ async def cmd_start(message: types.Message):
         )
     )
     await message.answer(
-        "🧬 <b>ProteinMine!</b>\n\n🎮 Tap button to play!",
+        "■ <b>Cigdem</b>\n\n🎮 Tap button to enter.",
         reply_markup=webapp,
         parse_mode="HTML",
     )
@@ -556,30 +547,31 @@ async def cmd_start(message: types.Message):
 @dp.message_handler(commands=["profile"])
 async def cmd_profile(message: types.Message):
     user_id = message.from_user.id
-    cursor.execute(
-        "SELECT protein, energy, xp, level, last_daily, daily_streak FROM users WHERE user_id = ?",
-        (user_id,),
-    )
-    row = cursor.fetchone()
+    user = db.users.find_one({"user_id": user_id})
 
-    if row is None:
-        await message.answer("You have no profile yet. Tap 🚀 Mine to begin.")
+    if user is None:
+        await message.answer("You have no profile yet. Tap 💎 Focus to begin.")
         return
 
-    protein, energy, xp, level, last_daily, daily_streak = row
+    protein = user.get("protein", 0)
+    energy = user.get("energy", MAX_ENERGY)
+    xp = user.get("xp", 0)
+    level = user.get("level", 1)
+    last_daily = user.get("last_daily")
+    daily_streak = user.get("daily_streak", 0)
     stats = get_or_create_stats(user_id)
 
     text_lines = [
         f"👤 Profile of <b>{message.from_user.full_name}</b>",
         "",
-        f"🧬 Protein: <b>{protein}</b>",
-        f"⭐ Level: <b>{level}</b>",
-        f"📈 XP: <b>{xp}</b>",
-        f"⚡ Energy: <b>{energy}/{MAX_ENERGY}</b>",
+        f"🧬 Attention: <b>{protein}</b>",
+        f"⭐ Trust Level: <b>{level}</b>",
+        f"📈 Trust: <b>{xp}</b>",
+        f"⚡ Desire: <b>{energy}/{MAX_ENERGY}</b>",
         "",
-        f"🖱 Total clicks: <b>{stats['total_clicks']}</b>",
-        f"🌟 Rare drops: <b>{stats['rare_drops']}</b>",
-        f"🔥 Best combo: <b>{stats['best_combo']}</b>",
+        f"🖱 Total focus: <b>{stats['total_clicks']}</b>",
+        f"🌟 Rare moments: <b>{stats['rare_drops']}</b>",
+        f"🔥 Best streak: <b>{stats['best_combo']}</b>",
     ]
 
     if last_daily:
@@ -592,20 +584,17 @@ async def cmd_profile(message: types.Message):
 @dp.message_handler(commands=["daily"])
 async def cmd_daily(message: types.Message):
     user_id = message.from_user.id
-    cursor.execute(
-        "SELECT protein, last_daily, daily_streak FROM users WHERE user_id = ?",
-        (user_id,),
-    )
-    row = cursor.fetchone()
+    user = db.users.find_one({"user_id": user_id})
 
-    if row is None:
-        cursor.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
-        conn.commit()
+    if user is None:
+        db.users.insert_one({"user_id": user_id})
         balance = 0
         last_daily = None
         daily_streak = 0
     else:
-        balance, last_daily, daily_streak = row
+        balance = user.get("protein", 0)
+        last_daily = user.get("last_daily")
+        daily_streak = user.get("daily_streak", 0)
 
     now = datetime.utcnow().date()
 
@@ -639,10 +628,10 @@ async def cmd_daily(message: types.Message):
         user_data[user_id]["balance"] = balance
 
     text = (
-        "🎁 <b>DAILY REWARD</b>\n"
-        f"+<b>{reward}</b> protein\n\n"
+        "🎁 <b>DAILY ATTENTION</b>\n"
+        f"+<b>{reward}</b> attention\n\n"
         f"🔥 Streak: <b>{daily_streak}</b> day(s)\n"
-        "Come back tomorrow!"
+        "She'll remember tomorrow."
     )
     await message.answer(text, parse_mode="HTML")
 
@@ -664,7 +653,7 @@ async def cmd_boost(message: types.Message):
 
     if user["balance"] < BOOST_COST:
         await message.answer(
-            f"Not enough protein for boost.\nNeed: {BOOST_COST}, you have: {user['balance']}."
+            f"Not enough attention for boost.\nNeed: {BOOST_COST}, you have: {user['balance']}."
         )
         return
 
@@ -675,7 +664,7 @@ async def cmd_boost(message: types.Message):
     await message.answer(
         f"⚡ BOOST X{BOOST_MULTIPLIER} ACTIVATED!\n"
         f"Duration: {BOOST_DURATION // 60} minutes.\n"
-        f"Cost: {BOOST_COST} protein."
+        f"Cost: {BOOST_COST} attention."
     )
 
 
@@ -688,8 +677,8 @@ async def btn_boost(message: types.Message):
 async def cmd_upgrade(message: types.Message):
     text = (
         "🧬 <b>UPGRADES MENU</b>\n\n"
-        "1️⃣ <b>+1 Min Gain</b> — 200 protein (/upgrade_min)\n"
-        "2️⃣ <b>+1 Max Gain</b> — 300 protein (/upgrade_max)\n\n"
+        "1️⃣ <b>+1 Min Gain</b> — 200 attention (/upgrade_min)\n"
+        "2️⃣ <b>+1 Max Gain</b> — 300 attention (/upgrade_max)\n\n"
         "Choose an upgrade."
     )
     await message.answer(text, parse_mode="HTML")
@@ -701,12 +690,12 @@ async def upgrade_min(message: types.Message):
     cost = 200
 
     if user["balance"] < cost:
-        return await message.answer("Not enough protein for this upgrade.")
+        return await message.answer("Not enough attention for this upgrade.")
 
     user["balance"] -= cost
     user["min_gain"] += 1
     await message.answer(
-        f"🔧 Min drop increased! Now: {user['min_gain']}–{user['max_gain']} PROTEIN."
+        f"🔧 Min focus increased! Now: {user['min_gain']}–{user['max_gain']} ATTENTION."
     )
 
 
@@ -716,12 +705,12 @@ async def upgrade_max(message: types.Message):
     cost = 300
 
     if user["balance"] < cost:
-        return await message.answer("Not enough protein for this upgrade.")
+        return await message.answer("Not enough attention for this upgrade.")
 
     user["balance"] -= cost
     user["max_gain"] += 1
     await message.answer(
-        f"🔧 Max drop increased! Now: {user['min_gain']}–{user['max_gain']} PROTEIN."
+        f"🔧 Max focus increased! Now: {user['min_gain']}–{user['max_gain']} ATTENTION."
     )
 
 
@@ -732,7 +721,7 @@ async def mine(message: types.Message):
     regenerate_energy(user)
 
     if user["energy"] <= 0:
-        await message.answer("⚡ Energy is empty!\nWait for regeneration…")
+        await message.answer("⚡ Desire is empty!\nShe needs a pause…")
         return
 
     user["energy"] -= 1
@@ -776,77 +765,75 @@ async def mine(message: types.Message):
     if user["xp"] >= user["level"] * 100:
         user["level"] += 1
         user["xp"] = 0
-        levelup_text = "\n🔥 LEVEL UP!"
+        levelup_text = "\n🔥 TRUST LEVEL UP!"
     else:
         levelup_text = ""
 
     save_user_to_db(user_id, user)
 
     # Update clan contribution
-    cursor.execute("SELECT clan_id FROM users WHERE user_id = ?", (user_id,))
-    clan_row = cursor.fetchone()
-    if clan_row and clan_row[0]:
-        cursor.execute(
-            "UPDATE users SET clan_contribution = clan_contribution + ? WHERE user_id = ?",
-            (gained, user_id),
+    user = db.users.find_one({"user_id": user_id})
+    if user and user.get("clan_id"):
+        clan_id = user["clan_id"]
+        db.users.update_one(
+            {"user_id": user_id},
+            {"$inc": {"clan_contribution": gained}}
         )
-        cursor.execute(
-            "UPDATE clans SET total_protein = total_protein + ? WHERE id = ?",
-            (gained, clan_row[0]),
+        db.clans.update_one(
+            {"id": clan_id},
+            {"$inc": {"total_protein": gained}}
         )
-        conn.commit()
 
     if rarity == "LEGENDARY":
         msg = (
             f"{'=' * 30}\n"
-            f"💎💎💎 LEGENDARY PROTEIN! 💎💎💎\n"
+            f"💎💎💎 LEGENDARY ATTENTION! 💎💎💎\n"
             f"{'=' * 30}\n"
-            f"+{gained} PROTEIN (x{multiplier})\n"
-            "🎉 THIS IS ULTRA RARE! 🎉\n"
+            f"+{gained} ATTENTION (x{multiplier})\n"
+            "🎉 SHE NOTICED! 🎉\n"
         )
     elif rarity == "EPIC":
         msg = (
             f"{'=' * 25}\n"
-            f"🔮🔮 EPIC PROTEIN! 🔮🔮\n"
+            f"🔮🔮 EPIC ATTENTION! 🔮🔮\n"
             f"{'=' * 25}\n"
-            f"+{gained} PROTEIN (x{multiplier})\n"
-            "⚡ RARE DROP!\n"
+            f"+{gained} ATTENTION (x{multiplier})\n"
+            "⚡ RARE MOMENT!\n"
         )
     elif rarity == "RARE":
-        msg = f"⭐ RARE PROTEIN!\n+{gained} PROTEIN (x{multiplier})\n"
+        msg = f"⭐ RARE ATTENTION!\n+{gained} ATTENTION (x{multiplier})\n"
     else:
-        msg = f"{emoji} +{gained} PROTEIN\n"
+        msg = f"{emoji} +{gained} ATTENTION\n"
 
     msg += (
         f"{boost_text}\n"
-        f"💰 Balance: {user['balance']}\n"
-        f"📊 XP: {user['xp']}\n"
-        f"⭐ Level: {user['level']}\n"
-        f"⚡ Energy: {user['energy']}/{MAX_ENERGY}{levelup_text}"
+        f"💰 Attention: {user['balance']}\n"
+        f"📊 Trust: {user['xp']}\n"
+        f"⭐ Trust Level: {user['level']}\n"
+        f"⚡ Desire: {user['energy']}/{MAX_ENERGY}{levelup_text}"
     )
     await message.answer(msg)
 
 
 @dp.message_handler(commands=["top"])
 async def cmd_top(message: types.Message):
-    cursor.execute(
-        "SELECT user_id, protein FROM users ORDER BY protein DESC LIMIT 20"
-    )
-    rows = cursor.fetchall()
+    users = list(db.users.find().sort("protein", -1).limit(20))
 
-    if not rows:
+    if not users:
         await message.answer("Leaderboard is empty.")
         return
 
-    text = ["🏆 <b>GLOBAL PROTEIN LEADERBOARD</b>\n"]
+    text = ["👁️ <b>WHO SHE NOTICES TODAY</b>\n"]
 
-    for i, (uid, protein) in enumerate(rows, start=1):
+    for i, user_doc in enumerate(users, start=1):
+        uid = user_doc["user_id"]
+        protein = user_doc.get("protein", 0)
         try:
-            user = await bot.get_chat(uid)
-            name = user.full_name
+            user_chat = await bot.get_chat(uid)
+            name = user_chat.full_name
         except Exception:
             name = f"User {uid}"
-        text.append(f"{i}. <b>{name}</b> — {protein} protein")
+        text.append(f"{i}. ■ <b>{name}</b> — {protein} ATT")
 
     await message.answer("\n".join(text), parse_mode="HTML")
 
@@ -856,7 +843,7 @@ def run_bot():
     Start the Telegram bot polling.
     Separated into a function so it can be started from another module (e.g. main.py).
     """
-    print("ProteinMine bot is running with ALL FEATURES...")
+    print("Cigdem ■ bot is running with ALL FEATURES...")
     executor.start_polling(dp, skip_updates=True)
 
 
