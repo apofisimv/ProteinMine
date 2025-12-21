@@ -544,6 +544,47 @@ async def cmd_start(message: types.Message):
 # ============================
 
 
+@dp.message_handler(commands=["help"])
+async def cmd_help(message: types.Message):
+    text = (
+        "■ <b>Cigdem — Help</b>\n\n"
+        "📋 <b>Available Commands:</b>\n\n"
+        "🎮 <b>Game Commands:</b>\n"
+        "• /start — Start the game\n"
+        "• /profile — View your profile\n"
+        "• /daily — Claim daily reward\n"
+        "• /boost — Activate boost (costs 100 attention)\n"
+        "• /upgrade — View upgrade options\n\n"
+        "👥 <b>Social Commands:</b>\n"
+        "• /invite — Get your referral link\n"
+        "• /referral — View referral program details\n"
+        "• /friends — View friends leaderboard\n"
+        "• /top — View global leaderboard\n\n"
+        "💫 <b>Circle Commands:</b>\n"
+        "• /clan — View or join a private circle\n"
+        "• /clan_top — View circle leaderboard\n\n"
+        "💎 Use the <b>FOCUS</b> button to gain attention!\n"
+        "Build trust, increase desire, and stay close to her."
+    )
+    await message.answer(text, parse_mode="HTML")
+
+
+@dp.message_handler(commands=["invite"])
+async def cmd_invite(message: types.Message):
+    user_id = message.from_user.id
+    bot_username = (await bot.me).username
+    ref_link = f"https://t.me/{bot_username}?start=ref{user_id}"
+    
+    text = (
+        "🔗 <b>Your Invite Link</b>\n\n"
+        f"<code>{ref_link}</code>\n\n"
+        "Share this link with someone who would like her.\n"
+        "When they join, you both get rewards!\n\n"
+        "Use /referral for more details."
+    )
+    await message.answer(text, parse_mode="HTML")
+
+
 @dp.message_handler(commands=["profile"])
 async def cmd_profile(message: types.Message):
     user_id = message.from_user.id
