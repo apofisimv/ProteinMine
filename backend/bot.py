@@ -531,7 +531,7 @@ async def cmd_start(message: types.Message):
         )
     )
     await message.answer(
-        "■ <b>Cigdem</b>\n\n🎮 Tap button to enter.",
+        "💎 <b>Cigdem</b>\n\n🎮 Tap button to enter.",
         reply_markup=webapp,
         parse_mode="HTML",
     )
@@ -545,7 +545,7 @@ async def cmd_start(message: types.Message):
 @dp.message_handler(commands=["help"])
 async def cmd_help(message: types.Message):
     text = (
-        "■ <b>Cigdem — Help</b>\n\n"
+        "💎 <b>Cigdem — Help</b>\n\n"
         "📋 <b>Available Commands:</b>\n\n"
         "🎮 <b>Game Commands:</b>\n"
         "• /start — Start the game\n"
@@ -576,7 +576,7 @@ async def cmd_invite(message: types.Message):
     text = (
         "🔗 <b>Your Invite Link</b>\n\n"
         f"<code>{ref_link}</code>\n\n"
-        "Share this link with someone who would like her.\n"
+        "Share this link with someone who would like her💎.\n"
         "When they join, you both get rewards!\n\n"
         "Use /referral for more details."
     )
@@ -801,7 +801,7 @@ def run_bot():
     Start the Telegram bot polling.
     Separated into a function so it can be started from another module (e.g. main.py).
     """
-    print("Cigdem ■ bot is running with ALL FEATURES...")
+    print("Cigdem 💎 bot is running with ALL FEATURES...")
     
     # Set bot commands on startup
     async def on_startup(dp):

@@ -730,7 +730,7 @@ function renderLeaderboard(data, type){
     const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `💎`;
     const baseName = item.username || (`Player ${item.user_id}`);
     const meDisplayName = tgUser?.username ? '@' + tgUser.username : (tgUser?.first_name || 'You');
-    const displayLabel = isMe ? '💎 YOU' : `💎 ${baseName}`;
+    const displayLabel = isMe ? 'YOU' : `${baseName}`;
     const avatarName = isMe ? (meDisplayName || baseName) : baseName;
     const avatarUrl = item.avatar_url || (isMe && tgUser?.photo_url) || null;
     const initial = (avatarName && avatarName.trim().charAt(0).toUpperCase()) || 'U';
