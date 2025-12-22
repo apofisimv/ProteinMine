@@ -299,15 +299,15 @@ def mine(user_id):
 
     roll = random.random()
 
-    if roll < 0.001:
+    if roll < 0.002:
         rarity = "LEGENDARY"
         multiplier = 100
         emoji = "💎"
-    elif roll < 0.01:
+    elif roll < 0.02:
         rarity = "EPIC"
         multiplier = 20
         emoji = "🔮"
-    elif roll < 0.10:
+    elif roll < 0.20:
         rarity = "RARE"
         multiplier = 5
         emoji = "⭐"
