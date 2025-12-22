@@ -5,7 +5,6 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, executor, types
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 # Load environment variables
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -176,10 +175,6 @@ def regenerate_energy(user: dict):
         user["last_energy_ts"] = now
 
 
-BTN_MINE = "💎 Focus"
-BTN_BOOST = "⚡ Boost"
-keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-keyboard.add(KeyboardButton(BTN_MINE), KeyboardButton(BTN_BOOST))
 
 
 # ============================
@@ -527,7 +522,7 @@ async def cmd_start(message: types.Message):
     webapp = InlineKeyboardMarkup(row_width=1)
     webapp.add(
         InlineKeyboardButton(
-            "🎮 PLAY GAME",
+            "🎮 OYUN OYNA",
             web_app=WebAppInfo(url=WEBAPP_URL),
         )
     )
@@ -536,7 +531,6 @@ async def cmd_start(message: types.Message):
         reply_markup=webapp,
         parse_mode="HTML",
     )
-    await message.answer("Or use buttons below:", reply_markup=keyboard)
 
 
 # ============================
@@ -563,7 +557,7 @@ async def cmd_help(message: types.Message):
         "💫 <b>Circle Commands:</b>\n"
         "• /clan — View or join a private circle\n"
         "• /clan_top — View circle leaderboard\n\n"
-        "💎 Use the <b>FOCUS</b> button to gain attention!\n"
+        "💎 Use the web app to gain attention!\n"
         "Build trust, increase desire, and stay close to her."
     )
     await message.answer(text, parse_mode="HTML")
@@ -591,7 +585,7 @@ async def cmd_profile(message: types.Message):
     user = db.users.find_one({"user_id": user_id})
 
     if user is None:
-        await message.answer("You have no profile yet. Tap 💎 Focus to begin.")
+        await message.answer("You have no profile yet. Use /start to begin.")
         return
 
     protein = user.get("protein", 0)
@@ -709,9 +703,6 @@ async def cmd_boost(message: types.Message):
     )
 
 
-@dp.message_handler(lambda m: m.text == BTN_BOOST)
-async def btn_boost(message: types.Message):
-    await cmd_boost(message)
 
 
 @dp.message_handler(commands=["upgrade"])
@@ -753,107 +744,6 @@ async def upgrade_max(message: types.Message):
     await message.answer(
         f"🔧 Max focus increased! Now: {user['min_gain']}–{user['max_gain']} ATTENTION."
     )
-
-
-@dp.message_handler(lambda m: m.text == BTN_MINE)
-async def mine(message: types.Message):
-    user_id = message.from_user.id
-    user = get_user(user_id)
-    regenerate_energy(user)
-
-    if user["energy"] <= 0:
-        await message.answer("⚡ Desire is empty!\nShe needs a pause…")
-        return
-
-    user["energy"] -= 1
-    inc_click(user_id)
-
-    roll = random.random()
-    if roll < 0.001:
-        rarity = "LEGENDARY"
-        emoji = "💎"
-        multiplier = 100
-    elif roll < 0.01:
-        rarity = "EPIC"
-        emoji = "🔮"
-        multiplier = 20
-    elif roll < 0.10:
-        rarity = "RARE"
-        emoji = "⭐"
-        multiplier = 5
-    else:
-        rarity = "COMMON"
-        emoji = "🧬"
-        multiplier = 1
-
-    base_gain = random.randint(user["min_gain"], user["max_gain"])
-    now = time.time()
-    boost_active = user.get("boost_until", 0) > now
-
-    if boost_active:
-        gained = base_gain * multiplier * BOOST_MULTIPLIER
-        boost_text = "⚡ BOOST x2\n"
-    else:
-        gained = base_gain * multiplier
-        boost_text = ""
-
-    user["balance"] += gained
-    user["xp"] += gained
-
-    if rarity != "COMMON":
-        add_drop(user_id, rarity, gained)
-
-    if user["xp"] >= user["level"] * 100:
-        user["level"] += 1
-        user["xp"] = 0
-        levelup_text = "\n🔥 TRUST LEVEL UP!"
-    else:
-        levelup_text = ""
-
-    save_user_to_db(user_id, user)
-
-    # Update clan contribution
-    user = db.users.find_one({"user_id": user_id})
-    if user and user.get("clan_id"):
-        clan_id = user["clan_id"]
-        db.users.update_one(
-            {"user_id": user_id},
-            {"$inc": {"clan_contribution": gained}}
-        )
-        db.clans.update_one(
-            {"id": clan_id},
-            {"$inc": {"total_protein": gained}}
-        )
-
-    if rarity == "LEGENDARY":
-        msg = (
-            f"{'=' * 30}\n"
-            f"💎💎💎 LEGENDARY ATTENTION! 💎💎💎\n"
-            f"{'=' * 30}\n"
-            f"+{gained} ATTENTION (x{multiplier})\n"
-            "🎉 SHE NOTICED! 🎉\n"
-        )
-    elif rarity == "EPIC":
-        msg = (
-            f"{'=' * 25}\n"
-            f"🔮🔮 EPIC ATTENTION! 🔮🔮\n"
-            f"{'=' * 25}\n"
-            f"+{gained} ATTENTION (x{multiplier})\n"
-            "⚡ RARE MOMENT!\n"
-        )
-    elif rarity == "RARE":
-        msg = f"⭐ RARE ATTENTION!\n+{gained} ATTENTION (x{multiplier})\n"
-    else:
-        msg = f"{emoji} +{gained} ATTENTION\n"
-
-    msg += (
-        f"{boost_text}\n"
-        f"💰 Attention: {user['balance']}\n"
-        f"📊 Trust: {user['xp']}\n"
-        f"⭐ Trust Level: {user['level']}\n"
-        f"⚡ Desire: {user['energy']}/{MAX_ENERGY}{levelup_text}"
-    )
-    await message.answer(msg)
 
 
 @dp.message_handler(commands=["top"])
