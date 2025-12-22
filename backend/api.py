@@ -3,6 +3,7 @@ from flask_cors import CORS
 import os
 import time
 import math
+from datetime import datetime
 
 from dotenv import load_dotenv
 from .db import db
@@ -23,6 +24,33 @@ MAX_ENERGY = 50
 ENERGY_REGEN_TIME = 72
 
 # Database is initialized in db.py
+
+
+def get_username_from_track(user_id: int):
+    """Get username from user_track collection"""
+    try:
+        track = db.user_track.find_one({"telegram_id": user_id})
+        if track:
+            username = track.get("username")
+            first_name = track.get("first_name")
+            last_name = track.get("last_name")
+            if username:
+                return f"@{username}"
+            elif first_name or last_name:
+                return f"{first_name or ''} {last_name or ''}".strip()
+        return f"User {user_id}"
+    except Exception:
+        return f"User {user_id}"
+
+
+def log_api_access(endpoint: str, user_id: int, action: str = ""):
+    """Log API access with username to console"""
+    username = get_username_from_track(user_id)
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_msg = f"[{timestamp}] API: {endpoint} | User: {username} (ID: {user_id})"
+    if action:
+        log_msg += f" | Action: {action}"
+    print(log_msg)
 
 
 # Approximate coordinates of main Turkish cities / provinces
@@ -134,6 +162,7 @@ def index():
 
 @app.route("/api/user/<int:user_id>", methods=["GET"])
 def get_user(user_id):
+    log_api_access("GET /api/user", user_id, "Get user data")
     user = db.users.find_one({"user_id": user_id})
     
     # Auto-create a user if it doesn't exist yet (first time from WebApp)
@@ -196,6 +225,7 @@ def get_referral_link(user_id):
     Return a shareable referral link for the given Telegram user id.
     Uses TELEGRAM_BOT_USERNAME from environment.
     """
+    log_api_access("GET /api/referral", user_id, "Get referral link")
     bot_username = os.getenv("TELEGRAM_BOT_USERNAME")
     if not bot_username:
         return jsonify({"error": "TELEGRAM_BOT_USERNAME is not configured"}), 500
@@ -229,6 +259,9 @@ def user_track():
     try:
         if telegram_id is not None:
             telegram_id = int(telegram_id)
+            # Log user tracking with username from request
+            display_name = username or first_name or f"User {telegram_id}"
+            log_api_access("POST /api/user-track", telegram_id, f"Track: {display_name}")
     except (TypeError, ValueError):
         telegram_id = None
 
@@ -288,6 +321,7 @@ def user_track():
 
 @app.route("/api/mine/<int:user_id>", methods=["POST"])
 def mine(user_id):
+    log_api_access("POST /api/mine", user_id, "Mining action")
     user = db.users.find_one({"user_id": user_id})
     
     # Auto-create user if they don't exist yet (first time mining from WebApp)
