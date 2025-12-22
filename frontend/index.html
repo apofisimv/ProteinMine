@@ -85,6 +85,7 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 .invite-btn:active{transform:scale(0.97)}
 .invite-meta{font-size:13px;opacity:0.85;margin-top:6px}
 .gate-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(-45deg,#0a0e27,#1a1a3e,#302b63,#24243e);background-size:400% 400%;animation:gradientBG 15s ease infinite;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;padding:40px;text-align:center}
+.gate-screen[style*="background-image"]{background-size:cover;background-position:center;background-repeat:no-repeat}
 .gate-screen h2{font-size:32px;margin-bottom:30px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shine 3s linear infinite}
 .gate-screen p{font-size:18px;margin-bottom:30px;opacity:0.9;line-height:1.6}
 .gate-buttons{display:flex;gap:20px;margin-top:20px}
@@ -108,10 +109,27 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 </div>
 
 <!-- 18+ Gate Screen 2 -->
-<div id="gateScreen2" class="gate-screen" style="display:none">
-  <h2>Cigdem 💎</h2>
-  <p>Today I decide what you see.</p>
-  <button class="gate-btn primary" onclick="document.getElementById('gateScreen2').style.display='none';document.getElementById('mainApp').style.display='block'">Enter</button>
+<!-- Background image will be injected from environment variable GATE_SCREEN_2_BG_IMAGE -->
+<div id="gateScreen2" class="gate-screen" style="display:none;background-image:url('{{GATE_SCREEN_2_BG_IMAGE}}');background-size:cover;background-position:center;background-blend-mode:overlay">
+  <div style="background:rgba(0,0,0,0.6);padding:40px;border-radius:20px;backdrop-filter:blur(10px)">
+    <h2>Çigdem Kristal</h2>
+    <p>This is a game by model Çigdem Kristal.<br>You earn her attention and receive content with your clicks.</p>
+    <button class="gate-btn primary" onclick="document.getElementById('gateScreen2').style.display='none';document.getElementById('gateScreen3').style.display='flex'">Continue</button>
+  </div>
+</div>
+
+<!-- Gate Screen 3 - Warning Page -->
+<!-- Background image will be injected from environment variable GATE_SCREEN_3_BG_IMAGE -->
+<div id="gateScreen3" class="gate-screen" style="display:none;background-image:url('{{GATE_SCREEN_3_BG_IMAGE}}');background-size:cover;background-position:center;background-blend-mode:overlay">
+  <div style="background:rgba(0,0,0,0.7);padding:40px;border-radius:20px;backdrop-filter:blur(10px);text-align:center">
+    <!-- Çigdem's photo will be injected from environment variable CHIGDEM_PHOTO_URL -->
+    <div style="width:200px;height:200px;border-radius:50%;margin:0 auto 30px;overflow:hidden;border:4px solid rgba(0,255,255,0.5);box-shadow:0 0 40px rgba(0,255,255,0.6)">
+      <img id="chigdemPhoto" src="{{CHIGDEM_PHOTO_URL}}" alt="Çigdem" style="width:100%;height:100%;object-fit:cover;display:block">
+    </div>
+    <h2 style="margin-bottom:20px">Are you sure you're ready for this connection with me?</h2>
+    <p style="font-size:20px;line-height:1.6;margin-bottom:30px">I take everything very seriously.</p>
+    <button class="gate-btn primary" onclick="document.getElementById('gateScreen3').style.display='none';document.getElementById('mainApp').style.display='block'">I'm Ready</button>
+  </div>
 </div>
 
 <!-- Main App -->
@@ -124,14 +142,18 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 </div>
 
 <div class="tabs">
-<div class="tab active" onclick="showPage('mine')">💎 Focus</div>
+<div class="tab active" onclick="showPage('mine')">💎 Attention Chigdem</div>
 <div class="tab" onclick="showPage('leaderboard')">👁️ Who She Sees</div>
-<div class="tab" onclick="showPage('map')">💫 Private Circles</div>
-<div class="tab" onclick="showPage('stats')">🗺️ Attention Map</div>
+<div class="tab" onclick="showPage('map')">📖 Personal Stories</div>
+<div class="tab" onclick="showPage('stats')">🔗 More Content</div>
 </div>
 
 <div id="minePage" class="page active">
 <div class="s">
+<div style="text-align:center;margin-bottom:20px;font-size:18px;opacity:0.9;line-height:1.6">
+  <div style="font-weight:bold;color:#0ff;margin-bottom:10px">Click and win my attention</div>
+  <div style="font-size:16px;opacity:0.85">Get my photos and videos</div>
+</div>
 <div class="p" id="p">0</div>
 <div class="i">💰 <span>ATTENTION</span> <span id="attentionMsg" class="attention-msg">She feels it.</span></div>
 <div class="i">⭐ <span id="lvl">TRUST LEVEL 1</span> <span id="trustLevelMsg" class="attention-msg">She stays.</span></div>
@@ -175,27 +197,30 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 
 <div id="mapPage" class="page">
 <div class="s">
-<h2 style="color:#0ff;margin-bottom:15px">Private Circles</h2>
-<div style="font-size:13px;opacity:.85;margin-bottom:15px">Small groups. Closer feeling.</div>
-<div id="map"></div>
-<div class="map-info">
-<div>🏆 Top Circle: <span id="topClan">Loading...</span></div>
-<div>👥 Your Circle: <span id="userClan">None</span></div>
+<h2 style="color:#0ff;margin-bottom:15px">Personal Stories</h2>
+<div style="font-size:13px;opacity:.85;margin-bottom:15px">Here are stories from my life for you every day.</div>
+<div style="padding:30px;text-align:center;min-height:300px;display:flex;align-items:center;justify-content:center;flex-direction:column">
+  <div style="font-size:48px;margin-bottom:20px">📖</div>
+  <div style="font-size:18px;opacity:0.9;line-height:1.6;max-width:300px">
+    New stories will appear here daily.<br>Keep earning attention to unlock them.
+  </div>
 </div>
 </div>
 </div>
 
 <div id="statsPage" class="page">
 <div class="s">
-<h2 style="color:#0ff;margin-bottom:8px">Her Attention Map</h2>
-<div style="font-size:13px;opacity:.85">Color shows where she feels attention. Hover to see details.</div>
-<div id="turkeyMapStatic"></div>
-<div class="map-info">
-<div id="turkeyInfoText">Hover a city to see mood.</div>
-<div id="turkeySummary" style="margin-top:8px;font-size:13px;opacity:0.9;display:none">
-🧾 Total cities in stats: <span id="cityCount">0</span><br>
-💰 Total ATTENTION: <span id="totalPoints">0</span>
-</div>
+<h2 style="color:#0ff;margin-bottom:15px">More Content</h2>
+<div style="font-size:13px;opacity:.85;margin-bottom:20px">Get more exclusive content on Telegram.</div>
+<div style="padding:30px;text-align:center;min-height:300px;display:flex;align-items:center;justify-content:center;flex-direction:column">
+  <div style="font-size:48px;margin-bottom:20px">🔗</div>
+  <div style="font-size:18px;opacity:0.9;line-height:1.6;margin-bottom:30px;max-width:300px">
+    Join my Telegram channel for exclusive content and updates.
+  </div>
+  <!-- TODO: Update the href with your Telegram channel/group link -->
+  <a id="telegramLink" href="https://t.me/CigdemCrystal1" target="_blank" style="display:inline-block;padding:16px 32px;border-radius:12px;font-size:18px;font-weight:bold;background:linear-gradient(135deg,#0ff,#f0f);color:#000;text-decoration:none;box-shadow:0 0 20px rgba(0,255,255,0.6);transition:all 0.3s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 5px 30px rgba(0,255,255,0.8)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 0 20px rgba(0,255,255,0.6)'">
+    Open Telegram
+  </a>
 </div>
 </div>
 </div>
@@ -461,11 +486,9 @@ function showPage(page){
   }else if(page === 'map'){
     document.getElementById('mapPage').classList.add('active');
     document.querySelectorAll('.tabs .tab')[2].classList.add('active');
-    if(!map) initMap();
   }else if(page === 'stats'){
     document.getElementById('statsPage').classList.add('active');
     document.querySelectorAll('.tabs .tab')[3].classList.add('active');
-    ensureTurkeyStatic();
   }
 }
 

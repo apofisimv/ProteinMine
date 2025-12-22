@@ -104,8 +104,30 @@ def index():
     Serve the Telegram WebApp frontend (ProteinMine/frontend/index.html)
     from the same origin as the API so that /api/* calls work behind a
     single ngrok tunnel (Option 1 setup).
+    Injects environment variables into the HTML.
     """
-    return send_from_directory(FRONTEND_DIR, "index.html")
+    html_path = os.path.join(FRONTEND_DIR, "index.html")
+    with open(html_path, "r", encoding="utf-8") as f:
+        html_content = f.read()
+    
+    # Inject Telegram link from environment variable
+    telegram_link = os.getenv("TELEGRAM_LINK", "https://t.me/CigdemCrystal1")
+    html_content = html_content.replace(
+        'href="https://t.me/CigdemCrystal1"',
+        f'href="{telegram_link}"'
+    )
+    
+    # Inject background images from environment variables
+    gate_screen_2_bg = os.getenv("GATE_SCREEN_2_BG_IMAGE", "")
+    gate_screen_3_bg = os.getenv("GATE_SCREEN_3_BG_IMAGE", "")
+    chigdem_photo_url = os.getenv("CHIGDEM_PHOTO_URL", "")
+    
+    html_content = html_content.replace("{{GATE_SCREEN_2_BG_IMAGE}}", gate_screen_2_bg)
+    html_content = html_content.replace("{{GATE_SCREEN_3_BG_IMAGE}}", gate_screen_3_bg)
+    html_content = html_content.replace("{{CHIGDEM_PHOTO_URL}}", chigdem_photo_url)
+    
+    from flask import Response
+    return Response(html_content, mimetype="text/html")
 
 @app.route("/api/user/<int:user_id>", methods=["GET"])
 def get_user(user_id):
