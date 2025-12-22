@@ -116,8 +116,8 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 
 <!-- 18+ Gate Screen 2 -->
 <!-- Background image will be injected from environment variable GATE_SCREEN_2_BG_IMAGE -->
-<div id="gateScreen2" class="gate-screen" style="display:none;background-image:url('{{GATE_SCREEN_2_BG_IMAGE}}');background-size:cover;background-position:center;background-blend-mode:overlay">
-  <div style="background:rgba(0,0,0,0.35);padding:40px;border-radius:20px;backdrop-filter:blur(10px)">
+  <div id="gateScreen2" class="gate-screen" style="display:none;background-image:url('{{GATE_SCREEN_2_BG_IMAGE}}');background-size:cover;background-position:center;background-blend-mode:overlay">
+    <div style="background:rgba(0, 0, 0, 0.051);padding:40px;border-radius:20px">
     <h2>Çigdem Kristal</h2>
     <p>This is a game by model Çigdem Kristal.<br>You earn her attention and receive content with your clicks.</p>
     <button class="gate-btn primary" onclick="document.getElementById('gateScreen2').style.display='none';document.getElementById('gateScreen3').style.display='flex'">Continue</button>
@@ -126,8 +126,8 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 
 <!-- Gate Screen 3 - Warning Page -->
 <!-- Background image will be injected from environment variable GATE_SCREEN_3_BG_IMAGE -->
-<div id="gateScreen3" class="gate-screen" style="display:none;background-image:url('{{GATE_SCREEN_3_BG_IMAGE}}');background-size:cover;background-position:center;background-blend-mode:overlay">
-  <div style="background:rgba(0,0,0,0.45);padding:40px;border-radius:20px;backdrop-filter:blur(10px);text-align:center">
+  <div id="gateScreen3" class="gate-screen" style="display:none;background-image:url('{{GATE_SCREEN_3_BG_IMAGE}}');background-size:cover;background-position:center;background-blend-mode:overlay">
+    <div style="background:rgba(0,0,0,0.051);padding:40px;border-radius:20px;text-align:center">
     <!-- Çigdem's photo will be injected from environment variable CHIGDEM_PHOTO_URL -->
     <div style="width:200px;height:200px;border-radius:50%;margin:0 auto 30px;overflow:hidden;border:4px solid rgba(0,255,255,0.5);box-shadow:0 0 40px rgba(0,255,255,0.6)">
       <img id="chigdemPhoto" src="{{CHIGDEM_PHOTO_URL}}" alt="Çigdem" style="width:100%;height:100%;object-fit:cover;display:block">
