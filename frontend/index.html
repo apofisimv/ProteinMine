@@ -28,12 +28,12 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 .page{display:none;animation:fadeIn 0.5s}
 .page.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-.s{background:linear-gradient(135deg,rgba(10,10,40,.85),rgba(30,10,40,.85));backdrop-filter:blur(20px);border-radius:20px;padding:15px;margin:10px 0;border:2px solid rgba(0,255,255,.6);box-shadow:0 0 20px rgba(0,255,255,0.3),0 8px 32px rgba(0,255,255,0.2),inset 0 0 20px rgba(0,255,255,0.1);position:relative;overflow:hidden;transition:all 0.3s}
+.s{background:linear-gradient(135deg,rgba(10,10,40,.6),rgba(30,10,40,.6));backdrop-filter:blur(10px);border-radius:20px;padding:15px;margin:10px 0;border:2px solid rgba(0,255,255,.6);box-shadow:0 0 20px rgba(0,255,255,0.3),0 8px 32px rgba(0,255,255,0.2),inset 0 0 20px rgba(0,255,255,0.1);position:relative;overflow:hidden;transition:all 0.3s}
 .s::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(0,255,255,0.1),transparent);animation:rotate 20s linear infinite;pointer-events:none}
 @keyframes rotate{to{transform:rotate(360deg)}}
 .s:hover{transform:translateY(-5px);box-shadow:0 0 30px rgba(0,255,255,0.5),0 12px 40px rgba(0,255,255,0.3),inset 0 0 30px rgba(0,255,255,0.15)}
 #minePage{position:relative;min-height:400px;background-size:cover;background-position:right center;background-repeat:no-repeat;z-index:1}
-.s.mine-block{max-width:65%;margin-left:0;margin-right:auto;margin-bottom:10px;position:relative;z-index:1}
+.s.mine-block{max-width:65%;margin-left:0;margin-right:auto;margin-bottom:10px;position:relative;z-index:1;opacity:0.75}
 #minePage .b{margin:10px auto 0;display:block;position:relative;z-index:1}
 @media(max-width:640px){.s.mine-block{max-width:100%}}
 .p{font-size:48px;color:#00ff88;margin:5px 0;font-weight:bold;text-shadow:0 0 20px #00ff88,0 0 40px #00ff88,0 0 60px rgba(0,255,136,0.5);transition:all 0.3s;filter:drop-shadow(0 0 10px rgba(0,255,136,0.8))}
@@ -154,8 +154,8 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 
 <div id="minePage" class="page active" style="background-image:url('{{MINE_BACKGROUND_IMAGE}}')">
 <div class="s mine-block">
-<div style="text-align:center;margin-bottom:8px;font-size:12px;opacity:0.3;line-height:1.4">
-  <div style="font-weight:bold;color:#0ff;margin-bottom:4px;text-shadow:0 0 10px rgba(0,255,255,0.5)">Click and win my attention</div>
+<div style="text-align:center;margin-bottom:8px;font-size:12px;opacity:0.9;line-height:1.4">
+  <div style="font-weight:bold;color:#0ff;margin-bottom:4px;text-shadow:0 0 10px rgba(0,255,255,0.95)">Click and win my attention</div>
   <div style="font-size:11px;opacity:0.85">Get my photos and videos</div>
 </div>
 <div class="p" id="p">0</div>
