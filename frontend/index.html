@@ -30,6 +30,8 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 .s::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(0,255,255,0.1),transparent);animation:rotate 20s linear infinite;pointer-events:none}
 @keyframes rotate{to{transform:rotate(360deg)}}
 .s:hover{transform:translateY(-5px);box-shadow:0 12px 40px rgba(0,255,255,0.2)}
+.s.mine-block{max-width:65%;margin-left:0;margin-right:auto}
+#minePage .b{margin-left:0;margin-right:auto}
 .p{font-size:64px;background:linear-gradient(135deg,#0ff,#ff0,#0ff);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shine 2s linear infinite;margin:15px 0;font-weight:bold;text-shadow:0 0 30px rgba(0,255,255,0.5);transition:all 0.3s}
 .p.grow{animation:grow 0.5s ease}
 @keyframes grow{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
@@ -149,7 +151,7 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 </div>
 
 <div id="minePage" class="page active">
-<div class="s">
+<div class="s mine-block">
 <div style="text-align:center;margin-bottom:20px;font-size:18px;opacity:0.9;line-height:1.6">
   <div style="font-weight:bold;color:#0ff;margin-bottom:10px">Click and win my attention</div>
   <div style="font-size:16px;opacity:0.85">Get my photos and videos</div>
