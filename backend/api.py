@@ -121,10 +121,12 @@ def index():
     gate_screen_2_bg = os.getenv("GATE_SCREEN_2_BG_IMAGE", "")
     gate_screen_3_bg = os.getenv("GATE_SCREEN_3_BG_IMAGE", "")
     chigdem_photo_url = os.getenv("CHIGDEM_PHOTO_URL", "")
+    mine_background_image = os.getenv("MINE_BACKGROUND_IMAGE", "")
     
     html_content = html_content.replace("{{GATE_SCREEN_2_BG_IMAGE}}", gate_screen_2_bg)
     html_content = html_content.replace("{{GATE_SCREEN_3_BG_IMAGE}}", gate_screen_3_bg)
     html_content = html_content.replace("{{CHIGDEM_PHOTO_URL}}", chigdem_photo_url)
+    html_content = html_content.replace("{{MINE_BACKGROUND_IMAGE}}", mine_background_image)
     
     from flask import Response
     return Response(html_content, mimetype="text/html")
