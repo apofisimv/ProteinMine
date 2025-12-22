@@ -19,7 +19,8 @@ FRONTEND_DIR = os.path.join(ROOT_DIR, "frontend")
 load_dotenv(os.path.join(ROOT_DIR, ".env"))
 
 MAX_ENERGY = 50
-ENERGY_REGEN_TIME = 30
+# Energy regenerates 1 point every 72 seconds = full recovery in 1 hour (3600 seconds / 50 energy)
+ENERGY_REGEN_TIME = 72
 
 # Database is initialized in db.py
 
@@ -148,7 +149,8 @@ def get_user(user_id):
             "clan_id": None,
             "clan_contribution": 0,
             "referrer_id": None,
-            "referral_count": 0
+            "referral_count": 0,
+            "last_energy_ts": time.time()
         }
         db.users.insert_one(user)
         protein, energy, xp, level = 0, MAX_ENERGY, 0, 1
@@ -157,6 +159,25 @@ def get_user(user_id):
         energy = user.get("energy", MAX_ENERGY)
         xp = user.get("xp", 0)
         level = user.get("level", 1)
+        
+        # Regenerate energy based on time elapsed
+        last_energy_ts = user.get("last_energy_ts", time.time())
+        now = time.time()
+        elapsed = now - last_energy_ts
+        regen_points = int(elapsed // ENERGY_REGEN_TIME)
+        
+        if regen_points > 0:
+            energy = min(MAX_ENERGY, energy + regen_points)
+            # Update energy and timestamp in database
+            db.users.update_one(
+                {"user_id": user_id},
+                {
+                    "$set": {
+                        "energy": energy,
+                        "last_energy_ts": now
+                    }
+                }
+            )
 
     return jsonify(
         {
@@ -282,7 +303,8 @@ def mine(user_id):
             "clan_id": None,
             "clan_contribution": 0,
             "referrer_id": None,
-            "referral_count": 0
+            "referral_count": 0,
+            "last_energy_ts": time.time()
         }
         db.users.insert_one(user)
         protein, energy, xp, level = 0, MAX_ENERGY, 0, 1
@@ -291,6 +313,15 @@ def mine(user_id):
         energy = user.get("energy", MAX_ENERGY)
         xp = user.get("xp", 0)
         level = user.get("level", 1)
+        
+        # Regenerate energy based on time elapsed before mining
+        last_energy_ts = user.get("last_energy_ts", time.time())
+        now = time.time()
+        elapsed = now - last_energy_ts
+        regen_points = int(elapsed // ENERGY_REGEN_TIME)
+        
+        if regen_points > 0:
+            energy = min(MAX_ENERGY, energy + regen_points)
 
     if energy <= 0:
         return jsonify({"error": "No energy"}), 400
@@ -329,6 +360,8 @@ def mine(user_id):
         xp = 0
         levelup = True
 
+    # Update energy and timestamp when energy is consumed
+    now = time.time()
     db.users.update_one(
         {"user_id": user_id},
         {
@@ -336,7 +369,8 @@ def mine(user_id):
                 "protein": protein,
                 "energy": energy,
                 "xp": xp,
-                "level": level
+                "level": level,
+                "last_energy_ts": now
             }
         }
     )

@@ -5,6 +5,7 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, executor, types
+from aiogram.types import BotCommand
 
 # Load environment variables
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,7 +28,8 @@ dp = Dispatcher(bot)
 
 user_data = {}
 MAX_ENERGY = 50
-ENERGY_REGEN_TIME = 30
+# Energy regenerates 1 point every 72 seconds = full recovery in 1 hour (3600 seconds / 50 energy)
+ENERGY_REGEN_TIME = 72
 BOOST_COST = 100
 BOOST_DURATION = 600
 BOOST_MULTIPLIER = 2
@@ -70,7 +72,8 @@ def get_or_create_user_row(user_id: int):
             "clan_id": None,
             "clan_contribution": 0,
             "referrer_id": None,
-            "referral_count": 0
+            "referral_count": 0,
+            "last_energy_ts": time.time()
         }
         db.users.insert_one(user)
         return {
@@ -424,7 +427,8 @@ async def cmd_start(message: types.Message):
             "clan_id": None,
             "clan_contribution": 0,
             "referrer_id": None,
-            "referral_count": 0
+            "referral_count": 0,
+            "last_energy_ts": time.time()
         })
         # Also initialize stats
         db.stats.insert_one({
@@ -622,7 +626,10 @@ async def cmd_daily(message: types.Message):
     user = db.users.find_one({"user_id": user_id})
 
     if user is None:
-        db.users.insert_one({"user_id": user_id})
+        db.users.insert_one({
+            "user_id": user_id,
+            "last_energy_ts": time.time()
+        })
         balance = 0
         last_daily = None
         daily_streak = 0
@@ -769,13 +776,38 @@ async def cmd_top(message: types.Message):
     await message.answer("\n".join(text), parse_mode="HTML")
 
 
+async def set_bot_commands():
+    """Set the bot commands menu that appears when users type '/' in Telegram"""
+    commands = [
+        BotCommand(command="start", description="🎮 Start the game"),
+        BotCommand(command="help", description="📋 Show help information"),
+        BotCommand(command="profile", description="👤 View your profile"),
+        BotCommand(command="daily", description="🎁 Claim daily reward"),
+        BotCommand(command="boost", description="⚡ Activate boost (100 attention)"),
+        BotCommand(command="upgrade", description="🔧 View upgrade options"),
+        BotCommand(command="invite", description="🔗 Get your referral link"),
+        BotCommand(command="referral", description="👥 Referral program details"),
+        BotCommand(command="friends", description="👥 Friends leaderboard"),
+        BotCommand(command="top", description="🏆 Global leaderboard"),
+        BotCommand(command="clan", description="💫 View or join private circle"),
+        BotCommand(command="clan_top", description="💫 Circle leaderboard"),
+    ]
+    await bot.set_my_commands(commands)
+    print("Bot commands menu set successfully!")
+
+
 def run_bot():
     """
     Start the Telegram bot polling.
     Separated into a function so it can be started from another module (e.g. main.py).
     """
     print("Cigdem ■ bot is running with ALL FEATURES...")
-    executor.start_polling(dp, skip_updates=True)
+    
+    # Set bot commands on startup
+    async def on_startup(dp):
+        await set_bot_commands()
+    
+    executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
 
 
 if __name__ == "__main__":
