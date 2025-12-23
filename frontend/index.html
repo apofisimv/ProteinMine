@@ -14,6 +14,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,sans-serif;background:linear-gradient(-45deg,#0a0e27,#1a1a3e,#302b63,#24243e);background-size:400% 400%;animation:gradientBG 15s ease infinite;min-height:100vh;color:#fff;overflow-x:hidden;position:relative}
+body.gate-active{overflow:hidden;height:100vh}
 body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(2px 2px at 20% 30%,#fff,transparent),radial-gradient(2px 2px at 60% 70%,rgba(0,255,255,0.8),transparent),radial-gradient(1px 1px at 50% 50%,#fff,transparent),radial-gradient(1px 1px at 80% 10%,rgba(255,255,255,0.6),transparent),radial-gradient(2px 2px at 90% 40%,rgba(0,255,255,0.6),transparent),radial-gradient(1px 1px at 33% 60%,#fff,transparent),radial-gradient(1px 1px at 15% 80%,rgba(255,255,255,0.4),transparent),radial-gradient(2px 2px at 55% 15%,rgba(0,255,255,0.5),transparent);background-size:200% 200%;background-position:0% 0%,100% 100%,50% 50%,80% 80%,20% 40%,90% 10%,10% 90%,70% 30%;animation:stars 20s linear infinite;pointer-events:none;z-index:0;opacity:0.6}
 @keyframes stars{0%,100%{background-position:0% 0%,100% 100%,50% 50%,80% 80%,20% 40%,90% 10%,10% 90%,70% 30%}50%{background-position:100% 100%,0% 0%,80% 80%,20% 40%,90% 10%,10% 90%,70% 30%,50% 50%}}
 @keyframes gradientBG{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
@@ -91,7 +92,7 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 .invite-btn{display:block;width:100%;padding:12px 16px;margin-top:10px;border-radius:14px;background:linear-gradient(135deg,#0ff,#f0f);color:#000;font-weight:bold;border:none;cursor:pointer;font-size:16px;box-shadow:0 0 20px rgba(0,255,255,0.6);transition:all 0.2s}
 .invite-btn:active{transform:scale(0.97)}
 .invite-meta{font-size:13px;opacity:0.85;margin-top:6px}
-.gate-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(-45deg,#0a0e27,#1a1a3e,#302b63,#24243e);background-size:400% 400%;animation:gradientBG 15s ease infinite;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;padding:40px;text-align:center}
+.gate-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(-45deg,#0a0e27,#1a1a3e,#302b63,#24243e);background-size:400% 400%;animation:gradientBG 15s ease infinite;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;padding:40px;text-align:center;overflow:hidden}
 .gate-screen[style*="background-image"]{background-size:cover;background-position:center;background-repeat:no-repeat}
 .gate-screen h2{font-size:32px;margin-bottom:30px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shine 3s linear infinite}
 .gate-screen p{font-size:18px;margin-bottom:30px;opacity:0.9;line-height:1.6}
@@ -110,32 +111,23 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
   <h2>18+</h2>
   <p>This space is 18+.<br>If you stay — you agree to listen.</p>
   <div class="gate-buttons">
-    <button class="gate-btn primary" onclick="document.getElementById('gateScreen1').style.display='none';document.getElementById('gateScreen2').style.display='flex'">I'm 18+</button>
+    <button class="gate-btn primary" onclick="document.body.classList.add('gate-active');document.getElementById('gateScreen1').style.display='none';document.getElementById('gateScreen2').style.display='flex'">I'm 18+</button>
     <button class="gate-btn secondary" onclick="window.close()">Leave</button>
   </div>
 </div>
 
-<!-- 18+ Gate Screen 2 -->
+<!-- Gate Screen 2 - Combined Introduction and Confirmation -->
 <!-- Background image will be injected from environment variable GATE_SCREEN_2_BG_IMAGE -->
   <div id="gateScreen2" class="gate-screen" style="display:none;background-image:url('{{GATE_SCREEN_2_BG_IMAGE}}');background-size:cover;background-position:center;background-blend-mode:overlay">
-    <div style="background:rgba(0, 0, 0, 0.051);padding:40px;border-radius:20px">
-    <h2>Çigdem Kristal</h2>
-    <p>This is a game by model Çigdem Kristal.<br>You earn her attention and receive content with your clicks.</p>
-    <button class="gate-btn primary" onclick="document.getElementById('gateScreen2').style.display='none';document.getElementById('gateScreen3').style.display='flex'">Continue</button>
-  </div>
-</div>
-
-<!-- Gate Screen 3 - Warning Page -->
-<!-- Background image will be injected from environment variable GATE_SCREEN_3_BG_IMAGE -->
-  <div id="gateScreen3" class="gate-screen" style="display:none;background-image:url('{{GATE_SCREEN_3_BG_IMAGE}}');background-size:cover;background-position:center;background-blend-mode:overlay">
-    <div style="background:rgba(0,0,0,0.051);padding:40px;border-radius:20px;text-align:center">
+    <div style="background:rgba(0,0,0,0.051);padding:20px 30px;border-radius:20px;text-align:center;max-width:90%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center">
     <!-- Çigdem's photo will be injected from environment variable CHIGDEM_PHOTO_URL -->
-    <div style="width:200px;height:200px;border-radius:50%;margin:0 auto 30px;overflow:hidden;border:4px solid rgba(0,255,255,0.5);box-shadow:0 0 40px rgba(0,255,255,0.6)">
+    <div style="width:120px;height:120px;border-radius:50%;margin:0 auto 15px;overflow:hidden;border:3px solid rgba(0,255,255,0.5);box-shadow:0 0 30px rgba(0,255,255,0.6);flex-shrink:0">
       <img id="chigdemPhoto" src="{{CHIGDEM_PHOTO_URL}}" alt="Çigdem" style="width:100%;height:100%;object-fit:cover;display:block">
     </div>
-    <h2 style="margin-bottom:20px">Are you sure you're ready for this connection with me?</h2>
-    <p style="font-size:20px;line-height:1.6;margin-bottom:30px">I take everything very seriously.</p>
-    <button class="gate-btn primary" onclick="document.getElementById('gateScreen3').style.display='none';document.getElementById('mainApp').style.display='block'">I'm Ready</button>
+    <h2 style="margin-bottom:12px;font-size:28px">Çigdem Kristal</h2>
+    <p style="font-size:16px;line-height:1.4;margin-bottom:15px;opacity:0.95">This is a game by model Çigdem Kristal. You earn her attention and receive content with your clicks.</p>
+    <p style="font-size:18px;line-height:1.4;margin-bottom:20px;font-weight:bold">Are you sure you're ready for this connection with me?<br>I take everything very seriously.</p>
+    <button class="gate-btn primary" onclick="document.body.classList.remove('gate-active');document.getElementById('gateScreen2').style.display='none';document.getElementById('mainApp').style.display='block'" style="margin-top:auto">I'm Ready</button>
   </div>
 </div>
 
@@ -147,9 +139,10 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 
 <div class="tabs">
 <div class="tab active" onclick="showPage('mine')">💎 Attention Chigdem</div>
-<div class="tab" onclick="showPage('leaderboard')">👁️ Who She Sees</div>
+<div class="tab" onclick="showPage('leaderboard')" style="overflow:visible"><img src="images/CartoonEye02.svg" alt="eye" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:2px;margin-left:-2px"><img src="images/CartoonEye02.svg" alt="eye" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px"> Kimi fark ediyor</div>
 <div class="tab" onclick="showPage('map')">📖 Personal Stories</div>
 <div class="tab" onclick="showPage('stats')">🔗 More Content</div>
+<div id="adminTab" class="tab" onclick="showPage('admin')" style="display:none">👑 Admin</div>
 </div>
 
 <div id="minePage" class="page active" style="background-image:url('{{MINE_BACKGROUND_IMAGE}}')">
@@ -177,7 +170,7 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 <div id="inviteCard" style="margin-bottom:16px;text-align:left">
 <div style="font-size:16px;margin-bottom:4px">👉 <span style="color:#0ff;font-weight:bold">Bring someone who would like her.</span></div>
 <div class="invite-meta">Each friend who joins with your link gives you +50 ATTENTION and +20 DESIRE.</div>
-<button id="inviteBtn" class="invite-btn">Invite a friend</button>
+<button id="inviteBtn" class="invite-btn">Bir arkadaşını davet et</button>
 <div id="inviteStatus" class="invite-meta"></div>
 </div>
 
@@ -228,15 +221,37 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 </div>
 </div>
 </div>
+
+<div id="adminPage" class="page">
+<div class="s">
+<h2 style="color:#0ff;margin-bottom:15px">👑 User Activity</h2>
+<div style="font-size:13px;opacity:.85;margin-bottom:20px">Monitor user activity and online status.</div>
+<div id="adminStats" style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap">
+  <div style="flex:1;min-width:150px;padding:15px;background:rgba(0,255,255,0.1);border-radius:10px;border:2px solid rgba(0,255,255,0.3)">
+    <div style="font-size:12px;opacity:0.8;margin-bottom:5px">Total Users</div>
+    <div style="font-size:24px;font-weight:bold;color:#0ff" id="adminTotalUsers">-</div>
+  </div>
+  <div style="flex:1;min-width:150px;padding:15px;background:rgba(0,255,136,0.1);border-radius:10px;border:2px solid rgba(0,255,136,0.3)">
+    <div style="font-size:12px;opacity:0.8;margin-bottom:5px">Online Now</div>
+    <div style="font-size:24px;font-weight:bold;color:#00ff88" id="adminOnlineUsers">-</div>
+  </div>
+</div>
+<div id="adminActivityContent" style="max-height:500px;overflow-y:auto">
+  <div style="text-align:center;padding:20px;opacity:0.8">Loading activity data...</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 
 <script>
   window.PROTEINMINE_API_URL = 'https://cigdemcrystall.com.ngrok.app/api';
+  window.ADMIN_USERNAME = '{{ADMIN_USERNAME}}';
 </script>
 
 <script>
 const API_URL = window.PROTEINMINE_API_URL || '/api';
+const ADMIN_USERNAME = (typeof window !== 'undefined' && window.ADMIN_USERNAME && !window.ADMIN_USERNAME.includes('{{')) ? window.ADMIN_USERNAME : '';
 let userId = null;
 let tgUser = null;
 let userLat = null;
@@ -246,6 +261,12 @@ let map, userMarker;
 let currentLbType = 'global';
 let turkeyStatsCache = null;
 let turkeyStaticInitialized = false;
+
+function isAdminViewer(){
+  if(!ADMIN_USERNAME || ADMIN_USERNAME.includes('{{')) return false;
+  const uname = tgUser?.username?.toLowerCase();
+  return !!uname && uname === ADMIN_USERNAME.toLowerCase();
+}
 
 const clanLocations = {
   1: {name: 'Ankara', lat: 39.9334, lng: 32.8597, emoji: '🏛️', color: '#e74c3c'},
@@ -260,6 +281,9 @@ if(window.Telegram?.WebApp){
   Telegram.WebApp.expand();
   tgUser = Telegram.WebApp.initDataUnsafe?.user;
   userId = tgUser?.id;
+  
+  // Update header immediately after tgUser is set
+  setTimeout(() => updateUserHeader(), 100);
 }
 const tg = window.Telegram.WebApp;
 
@@ -307,13 +331,23 @@ function updateUserHeader(){
   const nameEl = document.getElementById('userName');
   if(!nameEl) return;
 
-  const username =
-    (tgUser && tgUser.username) ? '@' + tgUser.username :
-    (tgUser && (tgUser.first_name || tgUser.last_name))
-      ? `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim()
-      : 'Guest';
-
-  nameEl.textContent = username || 'Guest';
+  const isAdmin = isAdminViewer();
+  if(isAdmin){
+    const username =
+      (tgUser && tgUser.username) ? '@' + tgUser.username :
+      (tgUser && (tgUser.first_name || tgUser.last_name))
+        ? `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim()
+        : 'Guest';
+    nameEl.textContent = username || 'Guest';
+  }else{
+    nameEl.textContent = 'Anonymous';
+  }
+  
+  // Show/hide admin tab
+  const adminTab = document.getElementById('adminTab');
+  if(adminTab){
+    adminTab.style.display = isAdmin ? 'flex' : 'none';
+  }
 }
 
 if(navigator.geolocation){
@@ -347,7 +381,14 @@ async function loadUser(){
     d.level   = Number.isFinite(data.level)   ? data.level   : 1;
     d.xp      = Number.isFinite(data.xp)      ? data.xp      : 0;
     
+    // Check admin status from API response
+    if(data.is_admin){
+      const adminTab = document.getElementById('adminTab');
+      if(adminTab) adminTab.style.display = 'flex';
+    }
+    
     updateUI();
+    updateUserHeader();
     sendUserTrack();
   }catch(e){
     console.error('Load error:', e);
@@ -365,7 +406,6 @@ function updateUI(){
   document.getElementById('eb').style.width = (maxEnergy > 0 ? (energy / maxEnergy * 100) : 0) + '%';
   document.getElementById('lvl').textContent = 'TRUST LEVEL ' + level;
   document.getElementById('xp').textContent = 'TRUST: ' + xp + '/' + (level * 100);
-  document.getElementById('btn').disabled = d.energy <= 0;
   
   // Contextual messages
   const attentionMsg = d.protein > 0 ? "She feels it." : "She's waiting.";
@@ -395,7 +435,7 @@ function createParticles(x, y, emoji){
 
 async function mine(){
   if(d.energy <= 0){
-    showNotification('⚡ She needs a pause. Wait for her to return...');
+    showNotification('⚡ You don\'t have Desire\nPlease invite friends or wait few hours');
     return;
   }
   
@@ -442,6 +482,7 @@ async function mine(){
 function showNotification(text, duration = 3000){
   const msg = document.createElement('div');
   msg.className = 'notification-msg';
+  msg.style.whiteSpace = 'pre-line';
   msg.textContent = text;
   document.body.appendChild(msg);
   setTimeout(() => {
@@ -492,6 +533,13 @@ function showPage(page){
   }else if(page === 'stats'){
     document.getElementById('statsPage').classList.add('active');
     document.querySelectorAll('.tabs .tab')[3].classList.add('active');
+  }else if(page === 'admin'){
+    document.getElementById('adminPage').classList.add('active');
+    const adminTabIndex = isAdminViewer() ? 4 : -1;
+    if(adminTabIndex >= 0){
+      document.querySelectorAll('.tabs .tab')[adminTabIndex].classList.add('active');
+    }
+    loadAdminActivity();
   }
 }
 
@@ -720,16 +768,30 @@ async function switchLeaderboard(type){
 function renderLeaderboard(data, type){
   const content = document.getElementById('leaderboardContent');
   let html = '';
+  const showNames = isAdminViewer();
   
   data.forEach((item, idx) => {
     const isMe = item.user_id === userId;
     const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `💎`;
     const baseName = item.username || (`Player ${item.user_id}`);
     const meDisplayName = tgUser?.username ? '@' + tgUser.username : (tgUser?.first_name || 'You');
-    const displayLabel = isMe ? 'YOU' : `${baseName}`;
-    const avatarName = isMe ? (meDisplayName || baseName) : baseName;
+    
+    // For non-admins: show first name for others, "YOU" for self
+    // For admins: show usernames
+    const firstName = item.first_name || 'Anonymous';
+    let displayLabel = '';
+    if(showNames){
+      displayLabel = isMe ? 'YOU' : `${baseName}`;
+    }else{
+      displayLabel = isMe ? 'YOU' : firstName;
+    }
+    
+    // Avatar name for initial fallback
+    const avatarName = showNames 
+      ? (isMe ? (meDisplayName || baseName) : baseName)
+      : (isMe ? (meDisplayName || 'You') : firstName);
     const avatarUrl = item.avatar_url || (isMe && tgUser?.photo_url) || null;
-    const initial = (avatarName && avatarName.trim().charAt(0).toUpperCase()) || 'U';
+    const initial = (avatarName && avatarName.trim().charAt(0).toUpperCase()) || 'A';
     const avatarHtml = avatarUrl
       ? `<div class="lb-avatar"><img src="${encodeURI(avatarUrl)}" alt="${avatarName}"></div>`
       : `<div class="lb-avatar placeholder">${initial}</div>`;
@@ -989,11 +1051,101 @@ function setMineBackgroundImage(imageUrl){
   }
 }
 
+let onlinePlayersCount = null;
 function updateOnlinePlayers(){
   const onlineEl = document.getElementById('onlinePlayers');
-  if(onlineEl){
-    const count = Math.floor(Math.random() * (6000 - 4000 + 1)) + 4000;
-    onlineEl.textContent = count.toLocaleString('en-US').replace(/,/g, ' ') + ' players online now';
+  if(!onlineEl) return;
+
+  // Initialize once with a base value in the expected range
+  if(onlinePlayersCount === null){
+    onlinePlayersCount = Math.floor(Math.random() * (5200 - 4200 + 1)) + 4200;
+  }
+
+  // Nudge the value smoothly every tick (small random step, usually up, sometimes down)
+  const step = Math.floor(Math.random() * (18 - 7 + 1)) + 7; // 7..18
+  const direction = Math.random() < 0.15 ? -1 : 1; // occasionally dip
+  onlinePlayersCount = Math.max(4000, Math.min(6000, onlinePlayersCount + direction * step));
+
+  onlineEl.textContent = onlinePlayersCount.toLocaleString('en-US').replace(/,/g, ' ') + ' players online now';
+}
+
+// Prevent scrolling when gate screens are active
+document.body.classList.add('gate-active');
+
+async function loadAdminActivity(){
+  if(!userId || !isAdminViewer()) return;
+  
+  const content = document.getElementById('adminActivityContent');
+  const totalEl = document.getElementById('adminTotalUsers');
+  const onlineEl = document.getElementById('adminOnlineUsers');
+  
+  if(!content) return;
+  
+  content.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.8">Loading activity data...</div>';
+  
+  try{
+    const res = await fetch(`${API_URL}/admin/activity?admin_id=${userId}`);
+    if(!res.ok){
+      if(res.status === 403){
+        content.innerHTML = '<div style="text-align:center;padding:20px;color:#f00">Unauthorized. Admin access required.</div>';
+        return;
+      }
+      throw new Error('Failed to load activity');
+    }
+    
+    const data = await res.json();
+    
+    if(totalEl) totalEl.textContent = data.total || 0;
+    if(onlineEl) onlineEl.textContent = data.online_count || 0;
+    
+    if(!data.users || data.users.length === 0){
+      content.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.8">No user activity data available.</div>';
+      return;
+    }
+    
+    let html = '';
+    data.users.forEach((user, idx) => {
+      const displayName = user.username ? `@${user.username}` : (user.first_name || `User ${user.user_id}`);
+      const onlineBadge = user.is_online 
+        ? '<span style="color:#00ff88;font-size:12px">🟢 Online</span>' 
+        : '<span style="color:#888;font-size:12px">⚫ Offline</span>';
+      
+      const formatTime = (timestamp) => {
+        if(!timestamp) return 'Never';
+        const date = new Date(timestamp * 1000);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if(diffMins < 1) return 'Just now';
+        if(diffMins < 60) return `${diffMins}m ago`;
+        if(diffHours < 24) return `${diffHours}h ago`;
+        if(diffDays < 7) return `${diffDays}d ago`;
+        return date.toLocaleDateString();
+      };
+      
+      html += `
+        <div class="lb-item" style="margin-bottom:10px">
+          <div class="lb-info" style="flex:1">
+            <div class="lb-name" style="display:flex;align-items:center;gap:10px">
+              ${displayName} ${onlineBadge}
+            </div>
+            <div class="lb-stats" style="font-size:12px;margin-top:5px">
+              Started: ${formatTime(user.first_seen)} • Last seen: ${formatTime(user.last_seen)}
+              ${user.city ? ` • 📍 ${user.city}` : ''}
+            </div>
+          </div>
+          <div class="lb-protein" style="font-size:14px">${user.points || 0} ATT</div>
+        </div>
+      `;
+    });
+    
+    content.innerHTML = html;
+  }catch(e){
+    console.error('Admin activity error:', e);
+    content.innerHTML = '<div style="text-align:center;padding:20px;color:#f00">Error loading activity data.</div>';
   }
 }
 
@@ -1005,7 +1157,7 @@ if(inviteBtn){
 loadUser();
 setInterval(loadUser, 5000);
 updateOnlinePlayers();
-setInterval(updateOnlinePlayers, 10000);
+setInterval(updateOnlinePlayers, 5000);
 </script>
 </body>
 </html>

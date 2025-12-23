@@ -157,13 +157,43 @@ def index():
     html_content = html_content.replace("{{CHIGDEM_PHOTO_URL}}", chigdem_photo_url)
     html_content = html_content.replace("{{MINE_BACKGROUND_IMAGE}}", mine_background_image)
     
+    # Inject admin username from environment variable
+    admin_username = os.getenv("ADMIN_USERNAME", "")
+    html_content = html_content.replace("{{ADMIN_USERNAME}}", admin_username)
+    
     from flask import Response
     return Response(html_content, mimetype="text/html")
+
+
+@app.route("/images/<path:filename>")
+def serve_image(filename):
+    """Serve static images from frontend/images directory"""
+    return send_from_directory(os.path.join(FRONTEND_DIR, "images"), filename)
+
+
+def is_admin_user(user_id):
+    """Check if a user is admin by comparing their username with ADMIN_USERNAME"""
+    admin_username = os.getenv("ADMIN_USERNAME", "").lower()
+    if not admin_username:
+        return False
+    
+    try:
+        track = db.user_track.find_one({"telegram_id": user_id})
+        if track:
+            username = track.get("username", "").lower()
+            return username == admin_username
+    except Exception:
+        pass
+    return False
+
 
 @app.route("/api/user/<int:user_id>", methods=["GET"])
 def get_user(user_id):
     log_api_access("GET /api/user", user_id, "Get user data")
     user = db.users.find_one({"user_id": user_id})
+    
+    # Check if user is admin
+    is_admin = is_admin_user(user_id)
     
     # Auto-create a user if it doesn't exist yet (first time from WebApp)
     if user is None:
@@ -215,6 +245,7 @@ def get_user(user_id):
             "xp": xp,
             "level": level,
             "maxEnergy": MAX_ENERGY,
+            "is_admin": is_admin,
         }
     )
 
@@ -277,22 +308,29 @@ def user_track():
 
     # Upsert by telegram_id; if it is NULL we just insert a new row each time
     if telegram_id is not None:
+        # Check if user exists to determine if this is first time
+        existing = db.user_track.find_one({"telegram_id": telegram_id})
+        update_data = {
+            "$set": {
+                "telegram_id": telegram_id,
+                "username": username,
+                "first_name": first_name,
+                "last_name": last_name,
+                "city": city,
+                "lat": float(lat) if lat is not None else None,
+                "lng": float(lng) if lng is not None else None,
+                "points": points,
+                "last_seen": now_ts,
+                "photo_url": photo_url
+            }
+        }
+        # Set first_seen only on first creation
+        if not existing:
+            update_data["$set"]["first_seen"] = now_ts
+        
         db.user_track.update_one(
             {"telegram_id": telegram_id},
-            {
-                "$set": {
-                    "telegram_id": telegram_id,
-                    "username": username,
-                    "first_name": first_name,
-                    "last_name": last_name,
-                    "city": city,
-                    "lat": float(lat) if lat is not None else None,
-                    "lng": float(lng) if lng is not None else None,
-                    "points": points,
-                    "last_seen": now_ts,
-                    "photo_url": photo_url
-                }
-            },
+            update_data,
             upsert=True
         )
     else:
@@ -524,6 +562,7 @@ def get_global_leaderboard():
                 "level": user.get("level", 1),
                 "xp": user.get("xp", 0),
                 "username": track.get("username"),
+                "first_name": track.get("first_name"),
                 "avatar_url": track.get("photo_url"),
             }
         )
@@ -560,6 +599,7 @@ def get_friends_leaderboard(user_id):
                 "level": user.get("level", 1),
                 "xp": user.get("xp", 0),
                 "username": track.get("username"),
+                "first_name": track.get("first_name"),
                 "avatar_url": track.get("photo_url"),
             }
         )
@@ -582,6 +622,58 @@ def get_user_position(user_id):
     position = db.users.count_documents({"protein": {"$gt": user_protein}}) + 1
 
     return jsonify({"position": position})
+
+
+@app.route("/api/admin/activity", methods=["GET"])
+def get_user_activity():
+    """
+    Admin endpoint to get user activity data.
+    Returns list of users with first_seen, last_seen, and online status.
+    """
+    # Get user_id from query parameter
+    admin_id = request.args.get("admin_id", type=int)
+    if not admin_id:
+        return jsonify({"error": "admin_id parameter required"}), 400
+    
+    # Check if user is admin
+    if not is_admin_user(admin_id):
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    # Get all users from user_track
+    users = list(db.user_track.find({"telegram_id": {"$ne": None}}).sort("last_seen", -1).limit(1000))
+    
+    now_ts = int(time.time())
+    ONLINE_THRESHOLD = 300  # 5 minutes - consider user online if last_seen within 5 minutes
+    
+    activity_list = []
+    for user in users:
+        user_id = user.get("telegram_id")
+        first_seen = user.get("first_seen")
+        last_seen = user.get("last_seen")
+        
+        # Determine online status
+        is_online = False
+        if last_seen:
+            time_since_last_seen = now_ts - last_seen
+            is_online = time_since_last_seen <= ONLINE_THRESHOLD
+        
+        activity_list.append({
+            "user_id": user_id,
+            "username": user.get("username"),
+            "first_name": user.get("first_name"),
+            "last_name": user.get("last_name"),
+            "first_seen": first_seen,
+            "last_seen": last_seen,
+            "is_online": is_online,
+            "points": user.get("points", 0),
+            "city": user.get("city")
+        })
+    
+    return jsonify({
+        "users": activity_list,
+        "total": len(activity_list),
+        "online_count": sum(1 for u in activity_list if u["is_online"])
+    })
 
 
 def run_api():
