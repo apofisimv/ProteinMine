@@ -103,6 +103,27 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 .gate-btn:hover{transform:translateY(-3px);box-shadow:0 5px 20px rgba(0,255,255,0.4)}
 .gate-btn:active{transform:translateY(0)}
 .attention-msg{font-size:9px;font-style:italic;opacity:0.8;margin-top:2px;color:#f0f}
+.wheel-container{display:flex;flex-direction:column;align-items:center;padding:10px 20px;position:relative}
+.wheel-wrapper{position:relative;width:320px;height:320px;margin:10px auto}
+.wheel{width:100%;height:100%;border-radius:50%;position:relative;overflow:hidden;border:4px solid rgba(0,255,255,0.6);box-shadow:0 0 30px rgba(0,255,255,0.4),inset 0 0 30px rgba(0,255,255,0.1);background:radial-gradient(circle at center,#1a1a3e 0%,#0a0e27 100%);transition:transform 4s cubic-bezier(0.17,0.67,0.12,0.99)}
+.wheel-spinning{pointer-events:none}
+.wheel-segment{position:absolute;width:50%;height:50%;top:0;left:50%;transform-origin:0 100%;box-sizing:border-box;overflow:visible}
+.wheel-segment-text{font-size:12px;line-height:1.3;color:#fff;text-shadow:1px 1px 2px rgba(0,0,0,0.8),0 0 8px rgba(0,0,0,0.9);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;pointer-events:none}
+.wheel-segment-text.tr{color:#fff}
+.wheel-arrow{position:absolute;top:-15px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;border-top:25px solid rgba(0,255,255,0.9);filter:drop-shadow(0 0 10px rgba(0,255,255,0.8));z-index:10}
+.wheel-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(255,0,255,0.8),rgba(0,255,255,0.6));border:3px solid rgba(0,255,255,0.9);box-shadow:0 0 20px rgba(0,255,255,0.6),inset 0 0 20px rgba(255,0,255,0.4);z-index:5;display:flex;align-items:center;justify-content:center;font-size:24px}
+.spin-btn{width:200px;height:50px;margin-top:15px;padding:14px 28px;border-radius:12px;background:linear-gradient(135deg,#0ff,#f0f);color:#000;font-weight:bold;border:none;cursor:pointer;font-size:18px;box-shadow:0 0 20px rgba(0,255,255,0.6);transition:all 0.3s;text-transform:uppercase;letter-spacing:1px}
+.spin-btn:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 5px 30px rgba(0,255,255,0.8)}
+.spin-btn:active:not(:disabled){transform:translateY(0)}
+.spin-btn:disabled{opacity:0.6;cursor:not-allowed}
+.wheel-result{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.95);padding:20px 30px;border-radius:15px;border:3px solid #0ff;box-shadow:0 0 40px rgba(0,255,255,0.8);z-index:20;text-align:center;max-width:280px;display:none;animation:resultPop 0.5s ease forwards}
+.wheel-result.show{display:block}
+@keyframes resultPop{0%{transform:translate(-50%,-50%) scale(0);opacity:0}50%{transform:translate(-50%,-50%) scale(1.1)}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.wheel-result-text{font-size:18px;line-height:1.4;color:#0ff;font-weight:bold;text-align:center;padding:10px}
+.wheel-result-text.tr{color:#0ff;font-weight:bold;font-size:20px}
+.wheel-result-close{position:absolute;top:5px;right:10px;background:none;border:none;color:#0ff;font-size:24px;cursor:pointer;line-height:1;opacity:0.7;transition:opacity 0.2s}
+.wheel-result-close:hover{opacity:1}
+@media(max-width:640px){.wheel-wrapper{width:260px;height:260px;margin:5px auto}.wheel-segment-text{font-size:11px;max-width:120px}.wheel-container{padding:5px 15px}.spin-btn{margin-top:10px;width:180px;height:45px;font-size:16px;padding:12px 24px}}
 </style>
 </head>
 <body>
@@ -126,7 +147,6 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
     </div>
     <h2 style="margin-bottom:12px;font-size:28px">Çigdem Kristal</h2>
     <p style="font-size:16px;line-height:1.4;margin-bottom:15px;opacity:0.95">This is a game by model Çigdem Kristal. You earn her attention and receive content with your clicks.</p>
-    <p style="font-size:18px;line-height:1.4;margin-bottom:20px;font-weight:bold">Are you sure you're ready for this connection with me?<br>I take everything very seriously.</p>
     <button class="gate-btn primary" onclick="document.body.classList.remove('gate-active');document.getElementById('gateScreen2').style.display='none';document.getElementById('mainApp').style.display='block'" style="margin-top:auto">I'm Ready</button>
   </div>
 </div>
@@ -193,13 +213,21 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 </div>
 
 <div id="mapPage" class="page">
-<div class="s">
-<h2 style="color:#0ff;margin-bottom:15px">Personal Stories</h2>
-<div style="font-size:13px;opacity:.85;margin-bottom:15px">Here are stories from my life for you every day.</div>
-<div style="padding:30px;text-align:center;min-height:300px;display:flex;align-items:center;justify-content:center;flex-direction:column">
-  <div style="font-size:48px;margin-bottom:20px">📖</div>
-  <div style="font-size:18px;opacity:0.9;line-height:1.6;max-width:300px">
-    New stories will appear here daily.<br>Keep earning attention to unlock them.
+<div class="s" style="padding:10px;margin:5px 0">
+<h2 style="color:#0ff;margin-bottom:8px">Personal Stories</h2>
+<div style="font-size:13px;opacity:.85;margin-bottom:10px">Here are stories from my life for you every day.</div>
+<div class="wheel-container">
+  <div style="font-size:18px;margin-bottom:5px;color:#0ff;font-weight:bold">🎡 Çark Metinleri</div>
+  <div class="wheel-wrapper">
+    <div class="wheel-arrow"></div>
+    <div class="wheel" id="wheel">
+      <div class="wheel-center">🎡</div>
+    </div>
+  </div>
+  <button class="spin-btn" id="spinBtn" onclick="spinWheel()">Spin</button>
+  <div class="wheel-result" id="wheelResult">
+    <button class="wheel-result-close" onclick="closeWheelResult()">×</button>
+    <div class="wheel-result-text tr" id="resultTextTR"></div>
   </div>
 </div>
 </div>
@@ -530,6 +558,7 @@ function showPage(page){
   }else if(page === 'map'){
     document.getElementById('mapPage').classList.add('active');
     document.querySelectorAll('.tabs .tab')[2].classList.add('active');
+    setTimeout(initWheel, 100);
   }else if(page === 'stats'){
     document.getElementById('statsPage').classList.add('active');
     document.querySelectorAll('.tabs .tab')[3].classList.add('active');
@@ -1158,6 +1187,146 @@ loadUser();
 setInterval(loadUser, 5000);
 updateOnlinePlayers();
 setInterval(updateOnlinePlayers, 5000);
+
+// Wheel of Fortune Feature
+const wheelItems = [
+  'Bana bir sır fısılda',
+  'Gözlerime 10 saniye bak',
+  'Yavaş bir dans yap ✅',
+  'Bana güzel bir iltifat et',
+  'Aşkla ilgili bir cümle söyle',
+  'Benden özel bir fotoğraf al',
+  'Seçim senin ✅',
+  'İsteğini sesinle anlat',
+  'Gülüşüm sadece sana',
+  'Sana bir öpücük gönderiyorum',
+  'Adını dudaklarımla söyleyeceğim',
+  'Bana özel bir soru sor',
+  'Başörtümü biraz aralayacağım',
+  'Nazik bir dokunuş hayal et'
+];
+
+let wheelInitialized = false;
+let isSpinning = false;
+let currentWheelRotation = 0;
+
+function initWheel(){
+  if(wheelInitialized) return;
+  wheelInitialized = true;
+  
+  const wheel = document.getElementById('wheel');
+  if(!wheel) return;
+  
+  const segmentCount = wheelItems.length;
+  const segmentAngle = 360 / segmentCount;
+  
+  // Create alternating colors
+  const colors = [
+    'rgba(255,0,100,0.7)',
+    'rgba(0,255,255,0.7)',
+    'rgba(255,0,100,0.7)',
+    'rgba(0,255,255,0.7)',
+    'rgba(255,0,100,0.7)',
+    'rgba(0,255,255,0.7)',
+    'rgba(255,0,100,0.7)',
+    'rgba(0,255,255,0.7)',
+    'rgba(255,0,100,0.7)',
+    'rgba(0,255,255,0.7)',
+    'rgba(255,0,100,0.7)',
+    'rgba(0,255,255,0.7)',
+    'rgba(255,0,100,0.7)',
+    'rgba(0,255,255,0.7)'
+  ];
+  
+  wheelItems.forEach((item, index) => {
+    const segment = document.createElement('div');
+    segment.className = 'wheel-segment';
+    
+    const angle = index * segmentAngle;
+    const rotation = angle - 90; // Start from top
+    
+    segment.style.transform = `rotate(${rotation}deg)`;
+    segment.style.background = `linear-gradient(${angle}deg, ${colors[index]}, ${colors[index]}00)`;
+    segment.style.borderRight = '2px solid rgba(0,255,255,0.4)';
+    segment.style.clipPath = 'polygon(0 0, 100% 0, 100% 100%)';
+    
+    // Text container to rotate text back to readable position
+    const textContainer = document.createElement('div');
+    textContainer.style.transform = `rotate(${90 - angle}deg)`;
+    textContainer.style.display = 'flex';
+    textContainer.style.flexDirection = 'column';
+    textContainer.style.alignItems = 'flex-start';
+    textContainer.style.justifyContent = 'center';
+    textContainer.style.height = '100%';
+    textContainer.style.paddingLeft = '10px';
+    
+    const trText = document.createElement('div');
+    trText.className = 'wheel-segment-text tr';
+    trText.textContent = item;
+    
+    textContainer.appendChild(trText);
+    segment.appendChild(textContainer);
+    wheel.appendChild(segment);
+  });
+}
+
+function spinWheel(){
+  if(isSpinning) return;
+  
+  const wheel = document.getElementById('wheel');
+  const spinBtn = document.getElementById('spinBtn');
+  const resultDiv = document.getElementById('wheelResult');
+  
+  if(!wheel || !spinBtn) return;
+  
+  isSpinning = true;
+  spinBtn.disabled = true;
+  wheel.classList.add('wheel-spinning');
+  
+  if(resultDiv){
+    resultDiv.classList.remove('show');
+  }
+  
+  // Random spin: 3-5 full rotations + random segment
+  const segmentCount = wheelItems.length;
+  const segmentAngle = 360 / segmentCount;
+  const randomSegment = Math.floor(Math.random() * segmentCount);
+  const fullRotations = 3 + Math.random() * 2; // 3-5 rotations
+  // Calculate target angle: full rotations + position segment at top (arrow position)
+  // Arrow points to top (0°), so we need to rotate so the selected segment is at top
+  const targetSegmentAngle = randomSegment * segmentAngle;
+  const targetRotation = fullRotations * 360 + (360 - targetSegmentAngle);
+  
+  // Update current rotation
+  currentWheelRotation += targetRotation;
+  
+  wheel.style.transform = `rotate(${currentWheelRotation}deg)`;
+  
+  // Show result after animation
+  setTimeout(() => {
+    const selectedItem = wheelItems[randomSegment];
+    
+    if(resultDiv){
+      const trText = document.getElementById('resultTextTR');
+      
+      if(trText) trText.textContent = selectedItem;
+      
+      resultDiv.classList.add('show');
+    }
+    
+    isSpinning = false;
+    spinBtn.disabled = false;
+    wheel.classList.remove('wheel-spinning');
+  }, 4000);
+}
+
+function closeWheelResult(){
+  const resultDiv = document.getElementById('wheelResult');
+  if(resultDiv){
+    resultDiv.classList.remove('show');
+  }
+}
+
 </script>
 </body>
 </html>
