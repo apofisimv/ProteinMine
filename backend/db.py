@@ -74,6 +74,11 @@ def init_db():
     db.friendships.create_index("user_id")
     db.friendships.create_index("friend_id")
     
+    # Admin messages collection indexes
+    db.admin_messages.create_index("admin_id")
+    db.admin_messages.create_index("timestamp")
+    db.admin_messages.create_index("recipient_user_ids")
+    
     # Initialize default clans if they don't exist
     default_clans = [
         {"id": 1, "name": "🏛️ Ankara", "total_protein": 0, "members_count": 0},

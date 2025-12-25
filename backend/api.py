@@ -834,6 +834,26 @@ def admin_send_message():
     success_count = sum(1 for r in results if r.get("success"))
     failed_count = len(results) - success_count
     
+    # Save message to database
+    try:
+        now_ts = int(time.time())
+        message_doc = {
+            "admin_id": admin_id,
+            "message_text": message_text,  # Text section
+            "image_url": image_url if image_url else None,  # Links section
+            "recipient_user_ids": user_ids,
+            "timestamp": now_ts,
+            "success_count": success_count,
+            "failed_count": failed_count,
+            "total_recipients": len(user_ids),
+            "results": results  # Store per-user results
+        }
+        db.admin_messages.insert_one(message_doc)
+        print(f"[ADMIN SEND MESSAGE] 💾 Message saved to database with ID: {message_doc.get('_id')}")
+    except Exception as e:
+        print(f"[ADMIN SEND MESSAGE] ⚠️ Failed to save message to database: {str(e)}")
+        # Continue even if saving fails - message was already sent
+    
     # Log failures for debugging
     if failed_count > 0:
         print(f"[ADMIN SEND MESSAGE] ⚠️ Summary: {failed_count} out of {len(results)} messages failed")
