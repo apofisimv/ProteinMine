@@ -220,8 +220,20 @@ def get_user(user_id):
         level = user.get("level", 1)
         
         # Regenerate energy based on time elapsed
-        last_energy_ts = user.get("last_energy_ts", time.time())
+        # If last_energy_ts is missing, initialize it to now minus some time to prevent instant regen
+        last_energy_ts = user.get("last_energy_ts")
         now = time.time()
+        
+        # Fix for users missing last_energy_ts: initialize it to a reasonable past time
+        if last_energy_ts is None:
+            # Set to 1 hour ago so they get some energy if they've been waiting
+            last_energy_ts = now - 3600
+            # Update the database to set this field
+            db.users.update_one(
+                {"user_id": user_id},
+                {"$set": {"last_energy_ts": last_energy_ts}}
+            )
+        
         elapsed = now - last_energy_ts
         regen_points = int(elapsed // ENERGY_REGEN_TIME)
         
@@ -236,6 +248,12 @@ def get_user(user_id):
                         "last_energy_ts": now
                     }
                 }
+            )
+        elif last_energy_ts < now - 3600:
+            # Even if no regen points, update timestamp if it's very old (prevents stuck timestamps)
+            db.users.update_one(
+                {"user_id": user_id},
+                {"$set": {"last_energy_ts": now}}
             )
 
     return jsonify(
@@ -387,13 +405,30 @@ def mine(user_id):
         level = user.get("level", 1)
         
         # Regenerate energy based on time elapsed before mining
-        last_energy_ts = user.get("last_energy_ts", time.time())
+        # If last_energy_ts is missing, initialize it to now minus some time to prevent instant regen
+        last_energy_ts = user.get("last_energy_ts")
         now = time.time()
+        
+        # Fix for users missing last_energy_ts: initialize it to a reasonable past time
+        if last_energy_ts is None:
+            # Set to 1 hour ago so they get some energy if they've been waiting
+            last_energy_ts = now - 3600
+            # Update the database to set this field
+            db.users.update_one(
+                {"user_id": user_id},
+                {"$set": {"last_energy_ts": last_energy_ts}}
+            )
+        
         elapsed = now - last_energy_ts
         regen_points = int(elapsed // ENERGY_REGEN_TIME)
         
         if regen_points > 0:
             energy = min(MAX_ENERGY, energy + regen_points)
+            # Update energy in database immediately when regenerated
+            db.users.update_one(
+                {"user_id": user_id},
+                {"$set": {"energy": energy, "last_energy_ts": now}}
+            )
 
     if energy <= 0:
         return jsonify({"error": "No energy"}), 400
