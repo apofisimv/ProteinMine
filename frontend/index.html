@@ -19,10 +19,11 @@ body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;backg
 @keyframes stars{0%,100%{background-position:0% 0%,100% 100%,50% 50%,80% 80%,20% 40%,90% 10%,10% 90%,70% 30%}50%{background-position:100% 100%,0% 0%,80% 80%,20% 40%,90% 10%,10% 90%,70% 30%,50% 50%}}
 @keyframes gradientBG{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
 .c{text-align:center;padding:10px;width:100%;max-width:400px;margin:0 auto;padding-bottom:20px;position:relative;z-index:1}
-h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shine 3s linear infinite;margin-bottom:15px;text-shadow:0 0 20px rgba(0,255,255,0.5)}
+h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-size:200% auto;background-clip:text;-webkit-text-fill-color:transparent;animation:shine 3s linear infinite;margin-bottom:15px;text-shadow:0 0 20px rgba(0,255,255,0.5)}
 @keyframes shine{to{background-position:200% center}}
-.tabs{display:flex;gap:5px;margin-bottom:20px;overflow-x:hidden;flex-wrap:wrap}
-.tab{flex:1;min-width:80px;padding:12px 8px;background:rgba(10,10,30,.6);border:2px solid rgba(0,255,255,.3);border-radius:12px;color:#0ff;cursor:pointer;font-size:14px;font-weight:bold;transition:all 0.3s;position:relative;overflow:hidden}
+.tabs{display:flex;gap:8px;margin-bottom:20px;overflow-x:hidden;flex-wrap:wrap}
+.tab{flex:1;min-width:80px;padding:10px 6px;background:rgba(10,10,30,.6);border:2px solid rgba(0,255,255,.3);border-radius:12px;color:#0ff;cursor:pointer;font-size:12px;font-weight:bold;transition:all 0.3s;position:relative;overflow:hidden;user-select:none;touch-action:manipulation;z-index:1}
+.tab:active{z-index:2}
 .tab::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(0,255,255,0.3),transparent);transition:0.5s}
 .tab:hover::before{left:100%}
 .tab.active{background:linear-gradient(135deg,rgba(0,255,255,.3),rgba(255,0,255,.3));border-color:#0ff;transform:translateY(-2px);box-shadow:0 5px 15px rgba(0,255,255,0.4)}
@@ -34,25 +35,25 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 @keyframes rotate{to{transform:rotate(360deg)}}
 .s:hover{transform:translateY(-5px);box-shadow:0 0 30px rgba(0,255,255,0.5),0 12px 40px rgba(0,255,255,0.3),inset 0 0 30px rgba(0,255,255,0.15)}
 #minePage{position:relative;min-height:400px;background-size:cover;background-position:right center;background-repeat:no-repeat;z-index:1}
-.s.mine-block{max-width:65%;margin-left:0;margin-right:auto;margin-bottom:10px;position:relative;z-index:1;opacity:0.75}
-#minePage .b{margin:10px auto 0;display:block;position:relative;z-index:1}
+.s.mine-block{max-width:65%;margin-left:0;margin-right:auto;margin-bottom:5px;position:relative;z-index:1;opacity:0.75;padding:10px}
+#minePage .b{margin:5px auto 0;display:block;position:relative;z-index:1}
 @media(max-width:640px){.s.mine-block{max-width:100%}}
-.p{font-size:48px;color:#00ff88;margin:5px 0;font-weight:bold;text-shadow:0 0 20px #00ff88,0 0 40px #00ff88,0 0 60px rgba(0,255,136,0.5);transition:all 0.3s;filter:drop-shadow(0 0 10px rgba(0,255,136,0.8))}
+.p{font-size:48px;color:#00ff88;margin:3px 0;font-weight:bold;text-shadow:0 0 20px #00ff88,0 0 40px #00ff88,0 0 60px rgba(0,255,136,0.5);transition:all 0.3s;filter:drop-shadow(0 0 10px rgba(0,255,136,0.8))}
 .p.grow{animation:grow 0.5s ease}
 @keyframes grow{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
-.i{font-size:12px;margin:4px 0;opacity:0.9;transition:all 0.3s}
+.i{font-size:12px;margin:2px 0;opacity:0.9;transition:all 0.3s}
 .i:hover{opacity:1;transform:translateX(5px)}
 .i span{color:#0ff;font-weight:bold}
-.e{width:100%;height:16px;background:rgba(0,255,255,0.2);border-radius:8px;overflow:hidden;margin-top:8px;box-shadow:inset 0 2px 10px rgba(0,0,0,0.5)}
+.e{width:100%;height:14px;background:rgba(0,255,255,0.2);border-radius:8px;overflow:hidden;margin-top:4px;box-shadow:inset 0 2px 10px rgba(0,0,0,0.5)}
 .eb{height:100%;background:linear-gradient(90deg,#0ff,#00ff88,#0ff);background-size:200% auto;animation:shine 2s linear infinite;transition:width 0.5s ease;box-shadow:0 0 20px rgba(0,255,255,0.6)}
 .et{margin-top:3px;font-size:11px;color:#0ff;font-weight:bold}
-.b{width:200px;height:200px;background:transparent;color:#0ff;font-size:100px;font-weight:bold;border:none;cursor:pointer;margin:15px auto;display:flex;align-items:center;justify-content:center;transition:all 0.3s;-webkit-tap-highlight-color:transparent;animation:pulse 2s ease infinite;position:relative;filter:drop-shadow(0 0 20px rgba(0,255,255,0.8))drop-shadow(0 0 40px rgba(0,255,255,0.4));text-shadow:0 0 30px rgba(0,255,255,0.9)}
+.b{width:280px;height:280px;background:transparent;color:#0ff;font-size:140px;font-weight:bold;border:none;cursor:pointer;margin:15px auto;display:flex;align-items:center;justify-content:center;transition:all 0.3s;-webkit-tap-highlight-color:transparent;animation:pulse 2s ease infinite;position:relative;z-index:10;pointer-events:auto;filter:drop-shadow(0 0 20px rgba(0,255,255,0.8))drop-shadow(0 0 40px rgba(0,255,255,0.4));text-shadow:0 0 30px rgba(0,255,255,0.9)}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 .b:active{transform:scale(0.95);animation:none}
 .b:disabled{opacity:0.5;cursor:not-allowed;animation:none}
 .b::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);background:rgba(255,255,255,0.5);transform:translate(-50%,-50%);pointer-events:none}
 .b.clicked::after{animation:ripple 0.6s ease-out}
-@keyframes ripple{to{width:200px;height:200px;opacity:0}}
+@keyframes ripple{to{width:280px;height:280px;opacity:0}}
 #map,#turkeyMapStatic{height:400px;border-radius:15px;margin:20px 0;border:2px solid rgba(0,255,255,.3);box-shadow:0 8px 32px rgba(0,255,255,0.2)}
 .map-info{background:rgba(10,10,30,.8);padding:15px;border-radius:10px;margin-top:10px;font-size:14px}
 .drop-msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:rgba(0,0,0,0.95);padding:40px;border-radius:25px;border:4px solid;font-size:28px;font-weight:bold;text-align:center;z-index:1000;animation:dropPop 0.6s ease forwards;box-shadow:0 0 60px rgba(0,255,255,0.8)}
@@ -129,11 +130,15 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 <body>
 <!-- 18+ Gate Screen 1 -->
 <div id="gateScreen1" class="gate-screen">
+  <!-- Çigdem's photo will be injected from environment variable CHIGDEM_PHOTO_URL -->
+  <div style="width:120px;height:120px;border-radius:50%;margin:0 auto 20px;overflow:hidden;border:3px solid rgba(0,255,255,0.5);box-shadow:0 0 30px rgba(0,255,255,0.6);flex-shrink:0">
+    <img id="chigdemPhoto" src="{{CHIGDEM_PHOTO_URL}}" alt="Çigdem" style="width:100%;height:100%;object-fit:cover;display:block">
+  </div>
   <h2>18+</h2>
-  <p>This space is 18+.<br>If you stay — you agree to listen.</p>
+  <p>Bu alan 18+ yaş içindir.<br>Kalırsan — dinlemeyi kabul ediyorsun.</p>
   <div class="gate-buttons">
-    <button class="gate-btn primary" onclick="document.body.classList.add('gate-active');document.getElementById('gateScreen1').style.display='none';document.getElementById('gateScreen2').style.display='flex'">I'm 18+</button>
-    <button class="gate-btn secondary" onclick="window.close()">Leave</button>
+    <button class="gate-btn primary" onclick="document.body.classList.add('gate-active');document.getElementById('gateScreen1').style.display='none';document.getElementById('gateScreen2').style.display='flex'">18+ Yaşındayım</button>
+    <button class="gate-btn secondary" onclick="if(window.Telegram?.WebApp?.close){window.Telegram.WebApp.close();}else{window.history.back();}">Ayrıl</button>
   </div>
 </div>
 
@@ -141,13 +146,9 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 <!-- Background image will be injected from environment variable GATE_SCREEN_2_BG_IMAGE -->
   <div id="gateScreen2" class="gate-screen" style="display:none;background-image:url('{{GATE_SCREEN_2_BG_IMAGE}}');background-size:cover;background-position:center;background-blend-mode:overlay">
     <div style="background:rgba(0,0,0,0.051);padding:20px 30px;border-radius:20px;text-align:center;max-width:90%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center">
-    <!-- Çigdem's photo will be injected from environment variable CHIGDEM_PHOTO_URL -->
-    <div style="width:120px;height:120px;border-radius:50%;margin:0 auto 15px;overflow:hidden;border:3px solid rgba(0,255,255,0.5);box-shadow:0 0 30px rgba(0,255,255,0.6);flex-shrink:0">
-      <img id="chigdemPhoto" src="{{CHIGDEM_PHOTO_URL}}" alt="Çigdem" style="width:100%;height:100%;object-fit:cover;display:block">
-    </div>
     <h2 style="margin-bottom:12px;font-size:28px">Çigdem Kristal</h2>
-    <p style="font-size:16px;line-height:1.4;margin-bottom:15px;opacity:0.95">This is a game by model Çigdem Kristal. You earn her attention and receive content with your clicks.</p>
-    <button class="gate-btn primary" onclick="document.body.classList.remove('gate-active');document.getElementById('gateScreen2').style.display='none';document.getElementById('mainApp').style.display='block'" style="margin-top:auto">I'm Ready</button>
+    <p style="font-size:16px;line-height:1.4;margin-bottom:15px;opacity:0.95">Bu, model Çigdem Kristal'in bir oyunudur. Tıklamalarınızla dikkatini kazanır ve içerik alırsınız.</p>
+    <button class="gate-btn primary" onclick="document.body.classList.remove('gate-active');document.getElementById('gateScreen2').style.display='none';document.getElementById('mainApp').style.display='block'" style="margin-top:auto">Hazırım</button>
   </div>
 </div>
 
@@ -155,67 +156,67 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 <div id="mainApp" style="display:none">
 <div class="c">
 <h1>Cigdem 💎</h1>
-<div id="onlinePlayers" style="color:#00ff00;font-size:14px;margin-bottom:15px;font-weight:bold">5 432 players online now</div>
+<div id="onlinePlayers" style="color:#00ff00;font-size:14px;margin-bottom:15px;font-weight:bold">5 432 oyuncu şu anda çevrimiçi</div>
 
 <div class="tabs">
-<div class="tab active" onclick="showPage('mine')">💎 Attention Chigdem</div>
-<div class="tab" onclick="showPage('leaderboard')" style="overflow:visible"><img src="images/CartoonEye02.svg" alt="eye" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:2px;margin-left:-2px"><img src="images/CartoonEye02.svg" alt="eye" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px"> Kimi fark ediyor</div>
-<div class="tab" onclick="showPage('map')">📖 Personal Stories</div>
-<div class="tab" onclick="showPage('stats')">🔗 More Content</div>
-<div id="adminTab" class="tab" onclick="showPage('admin')" style="display:none">👑 Admin</div>
+<div class="tab active" onclick="showPage('mine', event)">💎<br> Çigdem'e Dikkat</div>
+<div class="tab" onclick="showPage('leaderboard', event)" style="overflow:hidden"><img src="images/CartoonEye02.svg" alt="eye" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:2px;pointer-events:none"><img src="images/CartoonEye02.svg" alt="eye" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:4px;pointer-events:none"> Kimi fark ediyor</div>
+<div class="tab" onclick="showPage('map', event)">📖 <br>Kişisel Hikayeler</div>
+<div class="tab" onclick="showPage('stats', event)">🔗 <br>Daha Fazla İçerik</div>
+<div id="adminTab" class="tab" onclick="showPage('admin', event)" style="display:none">👑 Admin</div>
 </div>
 
 <div id="minePage" class="page active" style="background-image:url('{{MINE_BACKGROUND_IMAGE}}')">
 <div class="s mine-block">
-<div style="text-align:center;margin-bottom:8px;font-size:12px;opacity:0.9;line-height:1.4">
-  <div style="font-weight:bold;color:#0ff;margin-bottom:4px;text-shadow:0 0 10px rgba(0,255,255,0.95)">Click and win my attention</div>
-  <div style="font-size:11px;opacity:0.85">Get my photos and videos</div>
+<div style="text-align:center;margin-bottom:4px;font-size:12px;opacity:0.9;line-height:1.3">
+  <div style="font-weight:bold;color:#0ff;margin-bottom:2px;text-shadow:0 0 10px rgba(0,255,255,0.95)">Tıkla ve dikkatimi kazan</div>
+  <div style="font-size:11px;opacity:0.85">Fotoğraflarımı ve videolarımı al</div>
 </div>
 <div class="p" id="p">0</div>
-<div class="i">💰 <span>ATTENTION</span> <span id="attentionMsg" class="attention-msg">She feels it.</span></div>
-<div class="i">⭐ <span id="lvl">TRUST LEVEL 1</span> <span id="trustLevelMsg" class="attention-msg">She stays.</span></div>
-<div class="i">📊 <span id="xp">TRUST: 0/100</span> <span id="trustMsg" class="attention-msg">Don't rush. She likes patience.</span></div>
-<div class="i">⚡ <span>DESIRE</span></div>
+<div class="i">💰 <span>DİKKAT</span> <span id="attentionMsg" class="attention-msg">Bunu hissediyor.</span></div>
+<div class="i">⭐ <span id="lvl">GÜVEN SEVİYESİ 1</span> <span id="trustLevelMsg" class="attention-msg">Kalıyor.</span></div>
+<div class="i">📊 <span id="xp">GÜVEN: 0/100</span> <span id="trustMsg" class="attention-msg">Acele etme. Sabrı seviyor.</span></div>
+<div class="i">⚡ <span>ARZU</span></div>
 <div class="e"><div class="eb" id="eb"></div></div>
 <div class="et" id="et">0/50</div>
-<div id="desireMsg" class="attention-msg">Loading...</div>
+<div id="desireMsg" class="attention-msg">Yükleniyor...</div>
 </div>
 <button class="b" id="btn">💎</button>
 </div>
 
 <div id="leaderboardPage" class="page">
 <div class="s">
-<h2 style="color:#0ff;margin-bottom:15px">Who She Notices Today</h2>
+<h2 style="color:#0ff;margin-bottom:15px">Bugün Kimi Fark Ediyor</h2>
 
 <div id="inviteCard" style="margin-bottom:16px;text-align:left">
-<div style="font-size:16px;margin-bottom:4px">👉 <span style="color:#0ff;font-weight:bold">Bring someone who would like her.</span></div>
-<div class="invite-meta">Each friend who joins with your link gives you +50 ATTENTION and +20 DESIRE.</div>
+<div style="font-size:16px;margin-bottom:4px">👉 <span style="color:#0ff;font-weight:bold">Onu beğenecek birini getir.</span></div>
+<div class="invite-meta">Linkinle katılan her arkadaş sana +50 DİKKAT ve +20 ARZU verir.</div>
 <button id="inviteBtn" class="invite-btn">Bir arkadaşını davet et</button>
 <div id="inviteStatus" class="invite-meta"></div>
 </div>
 
 <div class="my-position" id="myPosition">
-<div style="font-size:14px;opacity:0.8">Your Position</div>
+<div style="font-size:14px;opacity:0.8">Senin Pozisyonun</div>
 <div style="font-size:36px;font-weight:bold;background:linear-gradient(135deg,#ff0,#0ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent" id="myPos">-</div>
 </div>
 
 <div class="lb-tabs">
-<div class="lb-tab active" onclick="switchLeaderboard('global')">🌍 Global</div>
-<div class="lb-tab" onclick="switchLeaderboard('friends')">👥 Friends</div>
-<div class="lb-tab" onclick="switchLeaderboard('clans')">🏰 Private Circles</div>
+<div class="lb-tab active" onclick="switchLeaderboard('global')">🌍 Küresel</div>
+<div class="lb-tab" onclick="switchLeaderboard('friends')">👥 Arkadaşlar</div>
+<div class="lb-tab" onclick="switchLeaderboard('clans')">🏰 Özel Çevreler</div>
 </div>
 
 <div id="leaderboardContent"></div>
 <div style="margin-top:20px;padding:15px;background:rgba(255,0,255,0.1);border-radius:12px;text-align:center;font-size:14px;opacity:0.9">
-  Top 10 will receive something private tonight.
+  İlk 10 kişi bu gece özel bir şey alacak.
 </div>
 </div>
 </div>
 
 <div id="mapPage" class="page">
 <div class="s" style="padding:10px;margin:5px 0">
-<h2 style="color:#0ff;margin-bottom:8px">Personal Stories</h2>
-<div style="font-size:13px;opacity:.85;margin-bottom:10px">Here are stories from my life for you every day.</div>
+<h2 style="color:#0ff;margin-bottom:8px">Kişisel Hikayeler</h2>
+<div style="font-size:13px;opacity:.85;margin-bottom:10px">Her gün sana hayatımdan hikayeler burada.</div>
 <div class="wheel-container">
   <div style="font-size:18px;margin-bottom:5px;color:#0ff;font-weight:bold">🎡 Çark Metinleri</div>
   <div class="wheel-wrapper">
@@ -224,7 +225,7 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
       <div class="wheel-center">🎡</div>
     </div>
   </div>
-  <button class="spin-btn" id="spinBtn" onclick="spinWheel()">Spin</button>
+  <button class="spin-btn" id="spinBtn" onclick="spinWheel()">Çevir</button>
   <div class="wheel-result" id="wheelResult">
     <button class="wheel-result-close" onclick="closeWheelResult()">×</button>
     <div class="wheel-result-text tr" id="resultTextTR"></div>
@@ -235,16 +236,16 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 
 <div id="statsPage" class="page">
 <div class="s">
-<h2 style="color:#0ff;margin-bottom:15px">More Content</h2>
-<div style="font-size:13px;opacity:.85;margin-bottom:20px">Get more exclusive content on Telegram.</div>
+<h2 style="color:#0ff;margin-bottom:15px">Daha Fazla İçerik</h2>
+<div style="font-size:13px;opacity:.85;margin-bottom:20px">Telegram'da daha fazla özel içerik al.</div>
 <div style="padding:30px;text-align:center;min-height:300px;display:flex;align-items:center;justify-content:center;flex-direction:column">
   <div style="font-size:48px;margin-bottom:20px">🔗</div>
   <div style="font-size:18px;opacity:0.9;line-height:1.6;margin-bottom:30px;max-width:300px">
-    Join my Telegram channel for exclusive content and updates.
+    Özel içerik ve güncellemeler için Telegram kanalıma katıl.
   </div>
   <!-- TODO: Update the href with your Telegram channel/group link -->
   <a id="telegramLink" href="https://t.me/CigdemCrystal1" target="_blank" style="display:inline-block;padding:16px 32px;border-radius:12px;font-size:18px;font-weight:bold;background:linear-gradient(135deg,#0ff,#f0f);color:#000;text-decoration:none;box-shadow:0 0 20px rgba(0,255,255,0.6);transition:all 0.3s" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 5px 30px rgba(0,255,255,0.8)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 0 20px rgba(0,255,255,0.6)'">
-    Open Telegram
+    Telegram'ı Aç
   </a>
 </div>
 </div>
@@ -252,20 +253,20 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 
 <div id="adminPage" class="page">
 <div class="s">
-<h2 style="color:#0ff;margin-bottom:15px">👑 User Activity</h2>
-<div style="font-size:13px;opacity:.85;margin-bottom:20px">Monitor user activity and online status.</div>
+<h2 style="color:#0ff;margin-bottom:15px">👑 Kullanıcı Aktivitesi</h2>
+<div style="font-size:13px;opacity:.85;margin-bottom:20px">Kullanıcı aktivitesini ve çevrimiçi durumunu izle.</div>
 <div id="adminStats" style="display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap">
   <div style="flex:1;min-width:150px;padding:15px;background:rgba(0,255,255,0.1);border-radius:10px;border:2px solid rgba(0,255,255,0.3)">
-    <div style="font-size:12px;opacity:0.8;margin-bottom:5px">Total Users</div>
+    <div style="font-size:12px;opacity:0.8;margin-bottom:5px">Toplam Kullanıcılar</div>
     <div style="font-size:24px;font-weight:bold;color:#0ff" id="adminTotalUsers">-</div>
   </div>
   <div style="flex:1;min-width:150px;padding:15px;background:rgba(0,255,136,0.1);border-radius:10px;border:2px solid rgba(0,255,136,0.3)">
-    <div style="font-size:12px;opacity:0.8;margin-bottom:5px">Online Now</div>
+    <div style="font-size:12px;opacity:0.8;margin-bottom:5px">Şu Anda Çevrimiçi</div>
     <div style="font-size:24px;font-weight:bold;color:#00ff88" id="adminOnlineUsers">-</div>
   </div>
 </div>
 <div id="adminActivityContent" style="max-height:500px;overflow-y:auto">
-  <div style="text-align:center;padding:20px;opacity:0.8">Loading activity data...</div>
+  <div style="text-align:center;padding:20px;opacity:0.8">Aktivite verileri yükleniyor...</div>
 </div>
 </div>
 </div>
@@ -424,28 +425,55 @@ async function loadUser(){
 }
 
 function updateUI(){
-  document.getElementById('p').textContent = d.protein;
+  const pEl = document.getElementById('p');
+  const etEl = document.getElementById('et');
+  const ebEl = document.getElementById('eb');
+  const lvlEl = document.getElementById('lvl');
+  const xpEl = document.getElementById('xp');
+  
+  if(!pEl || !etEl || !ebEl || !lvlEl || !xpEl) return; // Safety check
+  
+  pEl.textContent = d.protein;
   const energy = Number.isFinite(d.energy) ? d.energy : 0;
   const maxEnergy = Number.isFinite(d.maxEnergy) ? d.maxEnergy : 50;
   const level = Number.isFinite(d.level) ? d.level : 1;
   const xp = Number.isFinite(d.xp) ? d.xp : 0;
 
-  document.getElementById('et').textContent = `${energy}/${maxEnergy}`;
-  document.getElementById('eb').style.width = (maxEnergy > 0 ? (energy / maxEnergy * 100) : 0) + '%';
-  document.getElementById('lvl').textContent = 'TRUST LEVEL ' + level;
-  document.getElementById('xp').textContent = 'TRUST: ' + xp + '/' + (level * 100);
+  etEl.textContent = `${energy}/${maxEnergy}`;
+  ebEl.style.width = (maxEnergy > 0 ? (energy / maxEnergy * 100) : 0) + '%';
+  lvlEl.textContent = 'GÜVEN SEVİYESİ ' + level;
+  xpEl.textContent = 'GÜVEN: ' + xp + '/' + (level * 100);
   
   // Contextual messages
-  const attentionMsg = d.protein > 0 ? "She feels it." : "She's waiting.";
-  const trustLevelMsg = level > 1 ? "She stays." : "She's noticing you.";
-  const trustMsg = xp > 0 ? "Don't rush. She likes patience." : "Build trust slowly.";
+  const attentionMsg = d.protein > 0 ? "Bunu hissediyor." : "Bekliyor.";
+  const trustLevelMsg = level > 1 ? "Kalıyor." : "Seni fark ediyor.";
+  const trustMsg = xp > 0 ? "Acele etme. Sabrı seviyor." : "Güveni yavaşça inşa et.";
   // For new users with full energy, show a welcoming message instead of pause
-  const desireMsg = energy >= maxEnergy ? "She's ready." : energy > 0 ? "She's curious." : "She needs a pause.";
+  const desireMsg = energy >= maxEnergy ? "Hazır." : energy > 0 ? "Merak ediyor." : "Bir mola ihtiyacı var.";
   
-  document.getElementById('attentionMsg').textContent = attentionMsg;
-  document.getElementById('trustLevelMsg').textContent = trustLevelMsg;
-  document.getElementById('trustMsg').textContent = trustMsg;
-  document.getElementById('desireMsg').textContent = desireMsg;
+  const attentionMsgEl = document.getElementById('attentionMsg');
+  const trustLevelMsgEl = document.getElementById('trustLevelMsg');
+  const trustMsgEl = document.getElementById('trustMsg');
+  const desireMsgEl = document.getElementById('desireMsg');
+  
+  if(attentionMsgEl) attentionMsgEl.textContent = attentionMsg;
+  if(trustLevelMsgEl) trustLevelMsgEl.textContent = trustLevelMsg;
+  if(trustMsgEl) trustMsgEl.textContent = trustMsg;
+  if(desireMsgEl) desireMsgEl.textContent = desireMsg;
+  
+  // Button is always enabled - clicking with 0 energy will show notification
+  const btn = document.getElementById('btn');
+  if(btn){
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+    // Visual feedback when energy is low
+    if(energy <= 0){
+      btn.style.filter = 'drop-shadow(0 0 20px rgba(255,0,0,0.5)) drop-shadow(0 0 40px rgba(255,0,0,0.3))';
+    }else{
+      btn.style.filter = 'drop-shadow(0 0 20px rgba(0,255,255,0.8)) drop-shadow(0 0 40px rgba(0,255,255,0.4))';
+    }
+  }
 }
 
 function createParticles(x, y, emoji){
@@ -462,19 +490,30 @@ function createParticles(x, y, emoji){
 }
 
 async function mine(){
+  console.log('Mine function called', {energy: d.energy, userId: userId});
+  
+  const btn = document.getElementById('btn');
+  if(!btn){
+    console.error('Button element not found!');
+    return;
+  }
+  
+  // Always allow visual feedback on click
+  btn.classList.add('clicked');
+  setTimeout(() => btn.classList.remove('clicked'), 600);
+  
+  // Check energy first and show notification if needed
   if(d.energy <= 0){
-    showNotification('⚡ You don\'t have Desire\nPlease invite friends or wait few hours');
+    const rect = btn.getBoundingClientRect();
+    createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, '⚡');
+    showNotification('⚡ Arzun yok!\n\nLütfen arkadaşlarını davet et veya birkaç dakika bekle...');
     return;
   }
   
   if(!userId){
-    showNotification('⚠️ Telegram user ID not found');
+    showNotification('⚠️ Telegram kullanıcı ID bulunamadı');
     return;
   }
-  
-  const btn = document.getElementById('btn');
-  btn.classList.add('clicked');
-  setTimeout(() => btn.classList.remove('clicked'), 600);
   
   const rect = btn.getBoundingClientRect();
   createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, '💎');
@@ -484,7 +523,7 @@ async function mine(){
     const result = await res.json();
     
     if(!result.success){
-      showNotification(result.error || 'Mining failed');
+      showNotification(result.error || 'Kazma başarısız oldu');
       return;
     }
     
@@ -538,13 +577,19 @@ function showDropMessage(result){
     msg.style.borderColor = '#fff';
   }
   
-  msg.innerHTML = `${result.emoji} ${result.rarity}<br>+${result.gained} ATTENTION<br>${result.multiplier > 1 ? `(x${result.multiplier})` : ''}${result.levelup ? '<br>🔥 TRUST LEVEL UP!' : ''}`;
+  msg.innerHTML = `${result.emoji} ${result.rarity}<br>+${result.gained} DİKKAT<br>${result.multiplier > 1 ? `(x${result.multiplier})` : ''}${result.levelup ? '<br>🔥 GÜVEN SEVİYESİ YÜKSELDİ!' : ''}`;
   
   document.body.appendChild(msg);
   setTimeout(() => msg.remove(), 2500);
 }
 
-function showPage(page){
+function showPage(page, e){
+  // Prevent event bubbling and default behavior
+  if(e){
+    e.stopPropagation();
+    e.preventDefault();
+  }
+  
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
   
@@ -588,10 +633,10 @@ async function loadLeaderboard(){
 
 async function shareReferralLink(){
   const link = window.currentReferralLink;
-  const shareText = window.currentReferralText || 'Experience Cigdem  💎— an attention-based journey. Join me!';
+  const shareText = window.currentReferralText || 'Çigdem 💎 deneyimini yaşa — dikkat temelli bir yolculuk. Bana katıl!';
   
   if(!link){
-    showNotification('⚠️ Referral link not available');
+    showNotification('⚠️ Referans linki mevcut değil');
     return;
   }
   
@@ -603,7 +648,7 @@ async function shareReferralLink(){
       // The Mini App stays active in the background
       const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`;
       window.Telegram.WebApp.openLink(shareUrl, { try_instant_view: false });
-      showNotification('📤 Opening forward dialog...');
+      showNotification('📤 İletme penceresi açılıyor...');
       return;
     }catch(e){
       console.warn('Telegram share link failed:', e);
@@ -618,7 +663,7 @@ async function shareReferralLink(){
         text: shareText,
         url: link
       });
-      showNotification('✅ Shared successfully!');
+      showNotification('✅ Başarıyla paylaşıldı!');
       return;
     }catch(e){
       // User cancelled or share failed
@@ -631,20 +676,20 @@ async function shareReferralLink(){
   }
   
   // Fallback: Show notification
-  showNotification('⚠️ Share not available. Use copy button instead.');
+  showNotification('⚠️ Paylaşım mevcut değil. Bunun yerine kopyala butonunu kullan.');
 }
 
 async function copyReferralLink(){
   const link = window.currentReferralLink;
   
   if(!link){
-    showNotification('⚠️ Referral link not available');
+    showNotification('⚠️ Referans linki mevcut değil');
     return;
   }
   
   const copied = await copyToClipboard(link);
   if(copied){
-    showNotification('✅ Link copied to clipboard!');
+    showNotification('✅ Link panoya kopyalandı!');
   }else{
     // Fallback: Select text
     const statusEl = document.getElementById('inviteStatus');
@@ -656,7 +701,7 @@ async function copyReferralLink(){
         const selection = window.getSelection();
         selection.removeAllRanges();
         selection.addRange(range);
-        showNotification('📋 Link selected - tap copy in your browser');
+        showNotification('📋 Link seçildi - tarayıcında kopyala butonuna dokun');
       }
     }
   }
@@ -695,13 +740,13 @@ async function copyToClipboard(text){
 
 async function inviteFriend(){
   if(!userId){
-    showNotification('⚠️ Telegram user ID not found');
+    showNotification('⚠️ Telegram kullanıcı ID bulunamadı');
     return;
   }
 
   const statusEl = document.getElementById('inviteStatus');
   if(statusEl){
-    statusEl.textContent = 'Generating your invite link...';
+    statusEl.textContent = 'Davet linkin oluşturuluyor...';
   }
 
   try{
@@ -709,11 +754,11 @@ async function inviteFriend(){
     const data = await res.json();
 
     if(!res.ok || !data.referral_link){
-      throw new Error(data.error || 'Failed to get referral link');
+      throw new Error(data.error || 'Referans linki alınamadı');
     }
 
     const link = data.referral_link;
-    const shareText = 'Experience Cigdem 💎 — an attention-based journey. Join me!';
+    const shareText = 'Çigdem 💎 deneyimini yaşa — dikkat temelli bir yolculuk. Bana katıl!';
     
     // Store link in closure for button handlers
     window.currentReferralLink = link;
@@ -723,14 +768,14 @@ async function inviteFriend(){
     if(statusEl){
       statusEl.innerHTML = `
         <div id="referralSection">
-          <div style="margin-bottom:12px">Your referral link:</div>
+          <div style="margin-bottom:12px">Referans linkin:</div>
           <code style="background:rgba(0,255,255,0.2);padding:8px 12px;border-radius:6px;word-break:break-all;display:block;font-size:13px;color:#0ff;border:1px solid rgba(0,255,255,0.3);margin-bottom:12px">${link}</code>
           <div id="referralButtons" style="display:flex;gap:10px;flex-direction:column">
             <button onclick="shareReferralLink()" style="width:100%;padding:12px 16px;border-radius:10px;background:linear-gradient(135deg,#0ff,#f0f);color:#000;font-weight:bold;border:none;cursor:pointer;font-size:16px;box-shadow:0 0 20px rgba(0,255,255,0.4);transition:all 0.2s" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-              💬 Direct Message to Friend
+              💬 Arkadaşına Doğrudan Mesaj Gönder
             </button>
             <button onclick="copyReferralLink()" style="width:100%;padding:12px 16px;border-radius:10px;background:rgba(0,255,255,0.2);color:#0ff;font-weight:bold;border:2px solid rgba(0,255,255,0.5);cursor:pointer;font-size:16px;transition:all 0.2s" onmouseover="this.style.background='rgba(0,255,255,0.3)'" onmouseout="this.style.background='rgba(0,255,255,0.2)'">
-              📋 Copy Referral Link
+              📋 Referans Linkini Kopyala
             </button>
           </div>
         </div>
@@ -753,9 +798,9 @@ async function inviteFriend(){
   }catch(e){
     console.error('Invite error:', e);
     if(statusEl){
-      statusEl.textContent = 'Could not generate invite link.';
+      statusEl.textContent = 'Davet linki oluşturulamadı.';
     }
-    showNotification('Could not generate invite link.');
+    showNotification('Davet linki oluşturulamadı.');
   }
 }
 
@@ -766,7 +811,7 @@ async function switchLeaderboard(type){
   event?.target?.classList?.add('active') || document.querySelectorAll('.lb-tab')[type === 'global' ? 0 : type === 'friends' ? 1 : 2].classList.add('active');
   
   const content = document.getElementById('leaderboardContent');
-  content.innerHTML = '<div style="text-align:center;padding:20px">Loading...</div>';
+  content.innerHTML = '<div style="text-align:center;padding:20px">Yükleniyor...</div>';
   
   try{
     if(type === 'global'){
@@ -778,7 +823,7 @@ async function switchLeaderboard(type){
       const data = await res.json();
       
       if(data.length === 0){
-        content.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.8">No friends yet.<br>Bring someone who would like her.</div>';
+        content.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.8">Henüz arkadaş yok.<br>Onu beğenecek birini getir.</div>';
         return;
       }
       
@@ -790,7 +835,7 @@ async function switchLeaderboard(type){
     }
   }catch(e){
     console.error('Leaderboard error:', e);
-    content.innerHTML = '<div style="text-align:center;padding:20px;color:#f00">Error loading leaderboard</div>';
+    content.innerHTML = '<div style="text-align:center;padding:20px;color:#f00">Liderlik tablosu yüklenirken hata</div>';
   }
 }
 
@@ -828,13 +873,13 @@ function renderLeaderboard(data, type){
     // Ranking messages
     let rankingMsg = '';
     if(isMe) {
-      rankingMsg = 'She remembers you';
+      rankingMsg = 'Seni hatırlıyor';
     } else if(idx === 0) {
-      rankingMsg = 'She stayed longer';
+      rankingMsg = 'Daha uzun kaldı';
     } else if(idx < 3) {
-      rankingMsg = 'She noticed';
+      rankingMsg = 'Fark etti';
     } else {
-      rankingMsg = 'She\'s aware';
+      rankingMsg = 'Farkında';
     }
 
     html += `
@@ -843,7 +888,7 @@ function renderLeaderboard(data, type){
         ${avatarHtml}
         <div class="lb-info">
           <div class="lb-name">${displayLabel}</div>
-          <div class="lb-stats">Trust Level ${item.level} • ${item.xp} Trust • <span style="font-style:italic;opacity:0.8">${rankingMsg}</span></div>
+          <div class="lb-stats">Güven Seviyesi ${item.level} • ${item.xp} Güven • <span style="font-style:italic;opacity:0.8">${rankingMsg}</span></div>
         </div>
         <div class="lb-protein">${item.protein} ATT</div>
       </div>
@@ -866,7 +911,7 @@ function renderClanLeaderboard(data){
         <div class="lb-pos">${medal}</div>
         <div class="lb-info">
           <div class="lb-name">${loc ? loc.emoji : ''} ${clan.name}</div>
-          <div class="lb-stats">👥 ${clan.members_count} members</div>
+          <div class="lb-stats">👥 ${clan.members_count} üye</div>
         </div>
         <div class="lb-protein">${clan.total_protein} 🧬</div>
       </div>
@@ -900,11 +945,11 @@ async function initMap(){
       }).addTo(map);
       
       const marker = L.marker([loc.lat, loc.lng]).addTo(map);
-      const popupContent = `<div class="clan-popup"><h3>${loc.emoji} ${loc.name}</h3><div>🧬 Total ATTENTION: <b>${clan.total_protein}</b></div><div>👥 Members: <b>${clan.members_count}</b></div><div style="margin-top:8px;font-style:italic;opacity:0.8">Tonight she feels ${loc.name}.</div></div>`;
+        const popupContent = `<div class="clan-popup"><h3>${loc.emoji} ${loc.name}</h3><div>🧬 Toplam DİKKAT: <b>${clan.total_protein}</b></div><div>👥 Üyeler: <b>${clan.members_count}</b></div><div style="margin-top:8px;font-style:italic;opacity:0.8">Bu gece ${loc.name}'ı hissediyor.</div></div>`;
       marker.bindPopup(popupContent);
     });
     
-    document.getElementById('topClan').textContent = `${topClan.name} (${topClan.protein} ATTENTION)`;
+    document.getElementById('topClan').textContent = `${topClan.name} (${topClan.protein} DİKKAT)`;
   }catch(e){
     console.error('Map error:', e);
   }
@@ -914,14 +959,14 @@ function updateTurkeyInfo(cityName, points, users){
   const el = document.getElementById('turkeyInfoText');
   if(!el) return;
   if(!cityName){
-    el.innerHTML = 'Hover a city to see mood.';
+    el.innerHTML = 'Ruh halini görmek için bir şehrin üzerine gel.';
   }else{
     const pts = (points || 0).toLocaleString('en-US');
     const us = users || 0;
-    const moods = ['Cold', 'Warm', 'Intense', 'Overwhelming'];
+    const moods = ['Soğuk', 'Sıcak', 'Yoğun', 'Bastırıcı'];
     const moodIndex = Math.min(Math.floor((points || 0) / 1000), moods.length - 1);
     const mood = moods[moodIndex];
-    el.innerHTML = `📍 ${cityName} – Mood: <span style="color:#f0f;font-weight:bold">${mood}</span> &nbsp; · &nbsp; 🧬 <span style="color:#0ff;font-weight:bold">${pts}</span> ATTENTION &nbsp; · &nbsp; 👥 <span style="color:#0ff;font-weight:bold">${us}</span>`;
+    el.innerHTML = `📍 ${cityName} – Ruh Hali: <span style="color:#f0f;font-weight:bold">${mood}</span> &nbsp; · &nbsp; 🧬 <span style="color:#0ff;font-weight:bold">${pts}</span> DİKKAT &nbsp; · &nbsp; 👥 <span style="color:#0ff;font-weight:bold">${us}</span>`;
   }
 }
 
@@ -982,10 +1027,10 @@ function renderTurkeyStatic(){
       style:{fontFamily:'-apple-system,sans-serif'},
       spacing:[10,10,10,10]
     },
-    title:{text:''},
-    credits:{enabled:false},
-    legend:{
-      title:{text:'ATTENTION intensity'},
+      title:{text:''},
+      credits:{enabled:false},
+      legend:{
+      title:{text:'DİKKAT yoğunluğu'},
       layout:'horizontal',
       align:'center',
       verticalAlign:'bottom',
@@ -1017,19 +1062,19 @@ function renderTurkeyStatic(){
       pointFormatter:function(){
         const pts = this.value || 0;
         const users = this.users || 0;
-        const moods = ['Cold', 'Warm', 'Intense', 'Overwhelming'];
+        const moods = ['Soğuk', 'Sıcak', 'Yoğun', 'Bastırıcı'];
         const moodIndex = Math.min(Math.floor(pts / 1000), moods.length - 1);
         const mood = moods[moodIndex];
         return `<b>${this.name}</b><br/>`+
-               `Mood: <b style="color:#f0f">${mood}</b><br/>`+
-               `ATTENTION: <b>${pts.toLocaleString('en-US')}</b><br/>`+
-               `People: <b>${users.toLocaleString('en-US')}</b>`;
+               `Ruh Hali: <b style="color:#f0f">${mood}</b><br/>`+
+               `DİKKAT: <b>${pts.toLocaleString('en-US')}</b><br/>`+
+               `İnsanlar: <b>${users.toLocaleString('en-US')}</b>`;
       }
     },
     series:[{
       data,
       joinBy:['name','name'],
-      name:'ATTENTION',
+      name:'DİKKAT',
       states:{
         hover:{
           color:'#f0f',
@@ -1095,7 +1140,7 @@ function updateOnlinePlayers(){
   const direction = Math.random() < 0.15 ? -1 : 1; // occasionally dip
   onlinePlayersCount = Math.max(4000, Math.min(6000, onlinePlayersCount + direction * step));
 
-  onlineEl.textContent = onlinePlayersCount.toLocaleString('en-US').replace(/,/g, ' ') + ' players online now';
+  onlineEl.textContent = onlinePlayersCount.toLocaleString('en-US').replace(/,/g, ' ') + ' oyuncu şu anda çevrimiçi';
 }
 
 // Prevent scrolling when gate screens are active
@@ -1110,13 +1155,13 @@ async function loadAdminActivity(){
   
   if(!content) return;
   
-  content.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.8">Loading activity data...</div>';
+  content.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.8">Aktivite verileri yükleniyor...</div>';
   
   try{
     const res = await fetch(`${API_URL}/admin/activity?admin_id=${userId}`);
     if(!res.ok){
       if(res.status === 403){
-        content.innerHTML = '<div style="text-align:center;padding:20px;color:#f00">Unauthorized. Admin access required.</div>';
+        content.innerHTML = '<div style="text-align:center;padding:20px;color:#f00">Yetkisiz. Admin erişimi gerekli.</div>';
         return;
       }
       throw new Error('Failed to load activity');
@@ -1128,7 +1173,7 @@ async function loadAdminActivity(){
     if(onlineEl) onlineEl.textContent = data.online_count || 0;
     
     if(!data.users || data.users.length === 0){
-      content.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.8">No user activity data available.</div>';
+      content.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.8">Kullanıcı aktivite verisi mevcut değil.</div>';
       return;
     }
     
@@ -1136,11 +1181,11 @@ async function loadAdminActivity(){
     data.users.forEach((user, idx) => {
       const displayName = user.username ? `@${user.username}` : (user.first_name || `User ${user.user_id}`);
       const onlineBadge = user.is_online 
-        ? '<span style="color:#00ff88;font-size:12px">🟢 Online</span>' 
-        : '<span style="color:#888;font-size:12px">⚫ Offline</span>';
+        ? '<span style="color:#00ff88;font-size:12px">🟢 Çevrimiçi</span>' 
+        : '<span style="color:#888;font-size:12px">⚫ Çevrimdışı</span>';
       
       const formatTime = (timestamp) => {
-        if(!timestamp) return 'Never';
+        if(!timestamp) return 'Hiç';
         const date = new Date(timestamp * 1000);
         const now = new Date();
         const diffMs = now - date;
@@ -1148,11 +1193,11 @@ async function loadAdminActivity(){
         const diffHours = Math.floor(diffMs / 3600000);
         const diffDays = Math.floor(diffMs / 86400000);
         
-        if(diffMins < 1) return 'Just now';
-        if(diffMins < 60) return `${diffMins}m ago`;
-        if(diffHours < 24) return `${diffHours}h ago`;
-        if(diffDays < 7) return `${diffDays}d ago`;
-        return date.toLocaleDateString();
+        if(diffMins < 1) return 'Az önce';
+        if(diffMins < 60) return `${diffMins} dk önce`;
+        if(diffHours < 24) return `${diffHours} sa önce`;
+        if(diffDays < 7) return `${diffDays} gün önce`;
+        return date.toLocaleDateString('tr-TR');
       };
       
       html += `
@@ -1162,7 +1207,7 @@ async function loadAdminActivity(){
               ${displayName} ${onlineBadge}
             </div>
             <div class="lb-stats" style="font-size:12px;margin-top:5px">
-              Started: ${formatTime(user.first_seen)} • Last seen: ${formatTime(user.last_seen)}
+              Başladı: ${formatTime(user.first_seen)} • Son görülme: ${formatTime(user.last_seen)}
               ${user.city ? ` • 📍 ${user.city}` : ''}
             </div>
           </div>
@@ -1174,15 +1219,55 @@ async function loadAdminActivity(){
     content.innerHTML = html;
   }catch(e){
     console.error('Admin activity error:', e);
-    content.innerHTML = '<div style="text-align:center;padding:20px;color:#f00">Error loading activity data.</div>';
+    content.innerHTML = '<div style="text-align:center;padding:20px;color:#f00">Aktivite verileri yüklenirken hata.</div>';
   }
 }
 
-document.getElementById('btn').addEventListener('click', mine);
-const inviteBtn = document.getElementById('inviteBtn');
-if(inviteBtn){
-  inviteBtn.addEventListener('click', inviteFriend);
+// Wait for DOM to be ready before attaching event listeners
+function initEventListeners(){
+  const btn = document.getElementById('btn');
+  if(btn){
+    console.log('Button found, attaching event listeners');
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('Button clicked!');
+      mine();
+    });
+    // Also add touch event for mobile
+    btn.addEventListener('touchend', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('Button touched!');
+      mine();
+    });
+  }else{
+    console.error('Button element not found during initialization!');
+  }
+  
+  const inviteBtn = document.getElementById('inviteBtn');
+  if(inviteBtn){
+    inviteBtn.addEventListener('click', inviteFriend);
+  }
 }
+
+// Initialize when DOM is ready - try multiple times to ensure button exists
+function tryInitEventListeners(){
+  const btn = document.getElementById('btn');
+  if(btn || document.getElementById('mainApp')){
+    initEventListeners();
+  }else{
+    // Retry after a short delay if mainApp is not visible yet (gate screens)
+    setTimeout(tryInitEventListeners, 100);
+  }
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', tryInitEventListeners);
+}else{
+  tryInitEventListeners();
+}
+
 loadUser();
 setInterval(loadUser, 5000);
 updateOnlinePlayers();
@@ -1330,5 +1415,6 @@ function closeWheelResult(){
 </script>
 </body>
 </html>
+
 
 
