@@ -26,6 +26,26 @@ if not WEBAPP_URL:
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
+# Helper function to send messages (can be called from API)
+async def send_message_to_user(user_id: int, text: str, photo_url: str = None):
+    """
+    Send a message to a user via Telegram bot.
+    If photo_url is provided, sends a photo with caption.
+    Otherwise, sends a text message.
+    """
+    try:
+        if photo_url:
+            # Send photo with caption (even if text is empty)
+            await bot.send_photo(user_id, photo_url, caption=text if text else None, parse_mode="HTML" if text else None)
+        else:
+            # Send text message (must have text)
+            if not text:
+                return {"success": False, "user_id": user_id, "error": "Text message cannot be empty"}
+            await bot.send_message(user_id, text, parse_mode="HTML")
+        return {"success": True, "user_id": user_id}
+    except Exception as e:
+        return {"success": False, "user_id": user_id, "error": str(e)}
+
 user_data = {}
 MAX_ENERGY = 50
 # Energy regenerates 1 point every 72 seconds = full recovery in 1 hour (3600 seconds / 50 energy)

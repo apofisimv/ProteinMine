@@ -3,6 +3,7 @@ from flask_cors import CORS
 import os
 import time
 import math
+import asyncio
 from datetime import datetime
 
 from dotenv import load_dotenv
@@ -708,6 +709,148 @@ def get_user_activity():
         "users": activity_list,
         "total": len(activity_list),
         "online_count": sum(1 for u in activity_list if u["is_online"])
+    })
+
+
+@app.route("/api/admin/send-message", methods=["POST"])
+def admin_send_message():
+    """
+    Admin endpoint to send messages (text or image) to selected users.
+    Requires admin_id, user_ids (array), message_text, and optionally image_url.
+    """
+    data = request.get_json(silent=True) or {}
+    
+    admin_id = data.get("admin_id")
+    user_ids = data.get("user_ids", [])
+    message_text = data.get("message_text", "")
+    image_url = data.get("image_url", "").strip()
+    
+    print(f"[ADMIN SEND MESSAGE] Admin ID: {admin_id}, Users: {user_ids}, Has text: {bool(message_text)}, Has image: {bool(image_url)}")
+    
+    if not admin_id:
+        print("[ADMIN SEND MESSAGE] ERROR: admin_id required")
+        return jsonify({"error": "admin_id required"}), 400
+    
+    # Check if user is admin
+    if not is_admin_user(admin_id):
+        print(f"[ADMIN SEND MESSAGE] ERROR: Unauthorized - user {admin_id} is not admin")
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    if not user_ids:
+        print("[ADMIN SEND MESSAGE] ERROR: user_ids array required")
+        return jsonify({"error": "user_ids array required"}), 400
+    
+    if not message_text and not image_url:
+        print("[ADMIN SEND MESSAGE] ERROR: message_text or image_url required")
+        return jsonify({"error": "message_text or image_url required"}), 400
+    
+    # Prepare results
+    results = []
+    
+    # Create a new Bot instance for this thread (Flask runs in separate thread from bot)
+    # We need a separate bot instance because aiogram bots are tied to event loops
+    api_bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    if not api_bot_token:
+        return jsonify({"error": "TELEGRAM_BOT_TOKEN not configured"}), 500
+    
+    # Send messages to all selected users
+    # Create a new event loop for this thread (Flask runs in separate thread from bot)
+    loop = None
+    try:
+        from aiogram import Bot
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        api_bot = Bot(token=api_bot_token)
+        
+        async def send_all_messages():
+            send_results = []
+            print(f"[ADMIN SEND MESSAGE] Starting to send to {len(user_ids)} users")
+            for user_id in user_ids:
+                try:
+                    user_id_int = int(user_id)
+                    print(f"[ADMIN SEND MESSAGE] Attempting to send to user {user_id_int}")
+                    
+                    # Use None for image_url if not provided (so it sends text message)
+                    photo_url = image_url if image_url else None
+                    
+                    # Send message using the new bot instance
+                    if photo_url:
+                        print(f"[ADMIN SEND MESSAGE] Sending photo to user {user_id_int} with URL: {photo_url}")
+                        # Send photo with caption (even if text is empty)
+                        await api_bot.send_photo(
+                            user_id_int, 
+                            photo_url, 
+                            caption=message_text if message_text else None, 
+                            parse_mode="HTML" if message_text else None
+                        )
+                        print(f"[ADMIN SEND MESSAGE] ✅ Successfully sent photo to user {user_id_int}")
+                    else:
+                        # Send text message (must have text)
+                        if not message_text:
+                            error_msg = "Text message cannot be empty"
+                            print(f"[ADMIN SEND MESSAGE] ❌ FAILED to send to user {user_id_int}: {error_msg}")
+                            send_results.append({
+                                "success": False,
+                                "user_id": user_id_int,
+                                "error": error_msg
+                            })
+                            continue
+                        print(f"[ADMIN SEND MESSAGE] Sending text message to user {user_id_int}")
+                        await api_bot.send_message(user_id_int, message_text, parse_mode="HTML")
+                        print(f"[ADMIN SEND MESSAGE] ✅ Successfully sent text message to user {user_id_int}")
+                    
+                    send_results.append({"success": True, "user_id": user_id_int})
+                except Exception as e:
+                    error_msg = str(e)
+                    error_type = type(e).__name__
+                    print(f"[ADMIN SEND MESSAGE] ❌ FAILED to send to user {user_id}: {error_type}: {error_msg}")
+                    print(f"[ADMIN SEND MESSAGE] Error details: {repr(e)}")
+                    send_results.append({
+                        "success": False,
+                        "user_id": user_id,
+                        "error": error_msg
+                    })
+            print(f"[ADMIN SEND MESSAGE] Completed: {sum(1 for r in send_results if r.get('success'))} successful, {sum(1 for r in send_results if not r.get('success'))} failed")
+            return send_results
+        
+        results = loop.run_until_complete(send_all_messages())
+        
+        # Close the bot session
+        print("[ADMIN SEND MESSAGE] Closing bot session...")
+        loop.run_until_complete(api_bot.session.close())
+        print("[ADMIN SEND MESSAGE] Bot session closed")
+    except Exception as e:
+        error_type = type(e).__name__
+        error_msg = str(e)
+        print(f"[ADMIN SEND MESSAGE] ❌ CRITICAL ERROR: {error_type}: {error_msg}")
+        print(f"[ADMIN SEND MESSAGE] Error details: {repr(e)}")
+        import traceback
+        print(f"[ADMIN SEND MESSAGE] Traceback:\n{traceback.format_exc()}")
+        return jsonify({"error": f"Failed to send messages: {error_msg}"}), 500
+    finally:
+        if loop:
+            loop.close()
+    
+    success_count = sum(1 for r in results if r.get("success"))
+    failed_count = len(results) - success_count
+    
+    # Log failures for debugging
+    if failed_count > 0:
+        print(f"[ADMIN SEND MESSAGE] ⚠️ Summary: {failed_count} out of {len(results)} messages failed")
+        for result in results:
+            if not result.get("success"):
+                user_id = result.get('user_id')
+                error = result.get('error', 'Unknown error')
+                print(f"[ADMIN SEND MESSAGE] ❌ User {user_id} failed: {error}")
+    else:
+        print(f"[ADMIN SEND MESSAGE] ✅ All {success_count} messages sent successfully")
+    
+    return jsonify({
+        "success": True,
+        "total": len(results),
+        "success_count": success_count,
+        "failed_count": failed_count,
+        "results": results
     })
 
 
