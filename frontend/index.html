@@ -104,27 +104,30 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 .gate-btn:hover{transform:translateY(-3px);box-shadow:0 5px 20px rgba(0,255,255,0.4)}
 .gate-btn:active{transform:translateY(0)}
 .attention-msg{font-size:9px;font-style:italic;opacity:0.8;margin-top:2px;color:#f0f}
-.wheel-container{display:flex;flex-direction:column;align-items:center;padding:10px 20px;position:relative}
-.wheel-wrapper{position:relative;width:320px;height:320px;margin:10px auto}
-.wheel{width:100%;height:100%;border-radius:50%;position:relative;overflow:hidden;border:4px solid rgba(0,255,255,0.6);box-shadow:0 0 30px rgba(0,255,255,0.4),inset 0 0 30px rgba(0,255,255,0.1);background:radial-gradient(circle at center,#1a1a3e 0%,#0a0e27 100%);transition:transform 4s cubic-bezier(0.17,0.67,0.12,0.99)}
+.wheel-container{display:flex;flex-direction:column;align-items:center;padding:10px 20px;position:relative;min-height:auto}
+.wheel-wrapper{position:relative;width:340px;height:340px;margin:10px auto}
+.wheel{width:100%;height:100%;border-radius:50%;position:relative;overflow:visible;border:4px solid rgba(0,255,255,0.6);box-shadow:0 0 30px rgba(0,255,255,0.4),inset 0 0 30px rgba(0,255,255,0.1);background:transparent;transition:transform 4s cubic-bezier(0.17,0.67,0.12,0.99)}
+.wheel-canvas{width:100%;height:100%;border-radius:50%;display:block;transform-origin:center center;overflow:visible}
 .wheel-spinning{pointer-events:none}
 .wheel-segment{position:absolute;width:50%;height:50%;top:0;left:50%;transform-origin:0 100%;box-sizing:border-box;overflow:visible}
 .wheel-segment-text{font-size:12px;line-height:1.3;color:#fff;text-shadow:1px 1px 2px rgba(0,0,0,0.8),0 0 8px rgba(0,0,0,0.9);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;pointer-events:none}
 .wheel-segment-text.tr{color:#fff}
 .wheel-arrow{position:absolute;top:-15px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;border-top:25px solid rgba(0,255,255,0.9);filter:drop-shadow(0 0 10px rgba(0,255,255,0.8));z-index:10}
-.wheel-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(255,0,255,0.8),rgba(0,255,255,0.6));border:3px solid rgba(0,255,255,0.9);box-shadow:0 0 20px rgba(0,255,255,0.6),inset 0 0 20px rgba(255,0,255,0.4);z-index:5;display:flex;align-items:center;justify-content:center;font-size:24px}
+.wheel-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;background:#e60000;border:2px solid rgba(255,255,255,0.3);box-shadow:0 0 20px rgba(230,0,0,0.8),inset 0 0 15px rgba(255,100,100,0.3);z-index:10;display:flex;align-items:center;justify-content:center;font-size:20px;pointer-events:none}
 .spin-btn{width:200px;height:50px;margin-top:15px;padding:14px 28px;border-radius:12px;background:linear-gradient(135deg,#0ff,#f0f);color:#000;font-weight:bold;border:none;cursor:pointer;font-size:18px;box-shadow:0 0 20px rgba(0,255,255,0.6);transition:all 0.3s;text-transform:uppercase;letter-spacing:1px}
 .spin-btn:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 5px 30px rgba(0,255,255,0.8)}
 .spin-btn:active:not(:disabled){transform:translateY(0)}
 .spin-btn:disabled{opacity:0.6;cursor:not-allowed}
-.wheel-result{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.95);padding:20px 30px;border-radius:15px;border:3px solid #0ff;box-shadow:0 0 40px rgba(0,255,255,0.8);z-index:20;text-align:center;max-width:280px;display:none;animation:resultPop 0.5s ease forwards}
+.wheel-result-backdrop{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;display:none;backdrop-filter:blur(3px)}
+.wheel-result-backdrop.show{display:block}
+.wheel-result{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(10,14,39,0.98);padding:20px 25px;border-radius:15px;border:3px solid #e60000;box-shadow:0 0 40px rgba(230,0,0,0.8);z-index:1000;text-align:center;max-width:90%;width:320px;display:none;animation:resultPop 0.5s ease forwards;backdrop-filter:blur(10px);max-height:80vh;overflow-y:auto}
 .wheel-result.show{display:block}
 @keyframes resultPop{0%{transform:translate(-50%,-50%) scale(0);opacity:0}50%{transform:translate(-50%,-50%) scale(1.1)}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
 .wheel-result-text{font-size:18px;line-height:1.4;color:#0ff;font-weight:bold;text-align:center;padding:10px}
 .wheel-result-text.tr{color:#0ff;font-weight:bold;font-size:20px}
 .wheel-result-close{position:absolute;top:5px;right:10px;background:none;border:none;color:#0ff;font-size:24px;cursor:pointer;line-height:1;opacity:0.7;transition:opacity 0.2s}
 .wheel-result-close:hover{opacity:1}
-@media(max-width:640px){.wheel-wrapper{width:260px;height:260px;margin:5px auto}.wheel-segment-text{font-size:11px;max-width:120px}.wheel-container{padding:5px 15px}.spin-btn{margin-top:10px;width:180px;height:45px;font-size:16px;padding:12px 24px}}
+@media(max-width:640px){.wheel-wrapper{width:90vw;max-width:320px;height:90vw;max-height:320px;margin:5px auto}.wheel-container{padding:5px 10px;min-height:auto}.spin-btn{margin-top:8px;width:150px;height:40px;font-size:14px;padding:10px 20px}.wheel-result{max-width:90vw;padding:15px 20px;font-size:14px}.wheel-result-text.tr{font-size:14px}.wheel-result-text div{font-size:16px!important;margin-bottom:10px!important}.wheel-result-text div:last-child{font-size:12px!important;line-height:1.4!important}}
 </style>
 </head>
 <body>
@@ -215,18 +218,19 @@ h1{font-size:32px;background:linear-gradient(90deg,#0ff,#f0f,#0ff);background-si
 
 <div id="mapPage" class="page">
 <div class="s" style="padding:10px;margin:5px 0">
-<h2 style="color:#0ff;margin-bottom:8px">Kişisel Hikayeler</h2>
-<div style="font-size:13px;opacity:.85;margin-bottom:10px">Her gün sana hayatımdan hikayeler burada.</div>
+<h2 style="color:#0ff;margin-bottom:6px;font-size:16px">Kişisel Hikayeler</h2>
+<div style="font-size:10px;opacity:.85;margin-bottom:6px">Her gün sana hayatımdan hikayeler burada.</div>
 <div class="wheel-container">
-  <div style="font-size:18px;margin-bottom:5px;color:#0ff;font-weight:bold">🎡 Çark Metinleri</div>
+  <div style="font-size:12px;margin-bottom:5px;color:#e60000;font-weight:bold;text-shadow:0 0 10px rgba(230,0,0,0.6)">🌶️ Kişisel Hikayeler</div>
   <div class="wheel-wrapper">
     <div class="wheel-arrow"></div>
     <div class="wheel" id="wheel">
-      <div class="wheel-center">🎡</div>
+      <div class="wheel-center">🌶️</div>
     </div>
   </div>
-  <button class="spin-btn" id="spinBtn" onclick="spinWheel()">Çevir</button>
-  <div class="wheel-result" id="wheelResult">
+  <button class="spin-btn" id="spinBtn" onclick="spinWheel()">SPIN</button>
+  <div class="wheel-result-backdrop" id="wheelResultBackdrop" onclick="closeWheelResult()"></div>
+  <div class="wheel-result" id="wheelResult" onclick="event.stopPropagation()">
     <button class="wheel-result-close" onclick="closeWheelResult()">×</button>
     <div class="wheel-result-text tr" id="resultTextTR"></div>
   </div>
@@ -319,7 +323,10 @@ let turkeyStaticInitialized = false;
 function isAdminViewer(){
   if(!ADMIN_USERNAME || ADMIN_USERNAME.includes('{{')) return false;
   const uname = tgUser?.username?.toLowerCase();
-  return !!uname && uname === ADMIN_USERNAME.toLowerCase();
+  if(!uname) return false;
+  // Split by comma and check if username is in the admin list
+  const adminUsernames = ADMIN_USERNAME.split(',').map(u => u.trim().toLowerCase()).filter(u => u);
+  return adminUsernames.includes(uname);
 }
 
 const clanLocations = {
@@ -1412,148 +1419,301 @@ setInterval(loadUser, 5000);
 updateOnlinePlayers();
 setInterval(updateOnlinePlayers, 5000);
 
-// Wheel of Fortune Feature
+// Wheel of Fortune Feature - Kişisel Hikayeler
 const wheelItems = [
-  'Bana bir sır fısılda',
-  'Gözlerime 10 saniye bak',
-  'Yavaş bir dans yap ✅',
-  'Bana güzel bir iltifat et',
-  'Aşkla ilgili bir cümle söyle',
-  'Benden özel bir fotoğraf al',
-  'Seçim senin ✅',
-  'İsteğini sesinle anlat',
-  'Gülüşüm sadece sana',
-  'Sana bir öpücük gönderiyorum',
-  'Adını dudaklarımla söyleyeceğim',
-  'Bana özel bir soru sor',
-  'Başörtümü biraz aralayacağım',
-  'Nazik bir dokunuş hayal et'
+  'Deniz Manzaralı Oda',
+  'Pahalı Parfümün Kokusu',
+  'Boş Süitte Aynalar',
+  'Misafirlerden Sonraki Sessizlik',
+  'Salondaki Yumuşak Kanepe',
+  'İpek Çarşaflar',
+  'Kilitli Kapı',
+  'Lambanın Sıcak Işığı',
+  'Yabancı Yatak Odası',
+  'Kendine Ayrılan Bir An'
 ];
+
+// Full story texts for display
+const wheelStories = {
+  'Deniz Manzaralı Oda': 'Cigdem, temizlik arabasını iterek sahil kenarındaki otelin en üst katına çıkar. Odadaki panoramik pencereler doğrudan denize bakar; dalgalar yavaşça kıyıya vurur ve ritmi sanki onun nefesini ayarlar. Çarşafları düzgünce sererken ve cam masayı silerken, dalga sesi ona daha da yakın gelir, sanki içine işliyordur. Pencerenin önünde durur, gözlerini kapatır ve bulunduğu yeri bir anlığına unutur. Bu yalnızlıkta içinde sıcak ve utandırıcı bir heyecan uyanır. Cigdem dudaklarını hafifçe ısırır; kumaşın parmaklarına dokunuşu birden çok daha anlamlı olur. Kendini toparlayıp hiçbir şey olmamış gibi işine dönmesi için birkaç dakikaya ihtiyacı vardır.',
+  'Pahalı Parfümün Kokusu': 'Tepedeki geniş evde Cigdem gardıroptaki rafları siler. Elbiselerin arasında açık bırakılmış bir parfüm şişesi fark eder. Merakı ağır basar; dikkatlice yaklaştırıp koklar. Koku yoğun, sıcak ve neredeyse sarhoş edicidir. Onu bir anda hayaller dünyasına götürür; burada sadece bir temizlikçi değil, bambaşka gözlerle bakılan bir kadındır. Kalbi hızla atmaya başlar, cildi her harekete daha duyarlı olur. İçinde garip bir haz dalgası yükselirken nefesini tutar ve kendine fazla izin vermemek için şişeyi aceleyle yerine koyar.',
+  'Boş Süitte Aynalar': 'Başkanlık süitinde duvarlar dev aynalarla kaplıdır. Cigdem temizlik yaparken yansıması her yönden onu takip eder. Kendine nasıl baktığını fark eder — her zamanki gibi hızlıca değil, dikkatle. Odadaki sessizlikte doğrulur, sanki başkasının özgüvenini deniyormuş gibi. Aynada sadece iş kıyafetini değil, altında sakladığı kadını görür. Bakışı cesurlaşır, nefesi derinleşir. Bir an için kelimeler olmadan kendisiyle konuşuyormuş gibi hisseder ve içindeki ateşin biraz yükselmesine izin verir.',
+  'Misafirlerden Sonraki Sessizlik': 'Büyük ev sonunda boşalır — ev sahipleri gitmiştir ve Cigdem tertipli mobilyalar arasında yalnız kalır. Odadan odaya yavaşça yürür, nadir bulunan bu sessizliğin tadını çıkarır. Her adımı fazla yüksek gelir ve bu da sessizliği daha mahrem kılar. Duvara yaslanır, gözlerini kapatır ve kimsenin onu göremediği bu anın keyfini sürer. Tüm evin sadece ona ait olduğu hissiyle birlikte, normalde bastırdığı duyguları daha çok hissetme cesareti gelir. Sonra derin bir nefes alır, kendini toparlar ve işine döner.',
+  'Salondaki Yumuşak Kanepe': 'Yüksek tavanlı salonda büyük, kadife kaplı bir kanepe vardır. Cigdem sehpayı silerken farkında olmadan kanepenin kenarına oturur — sadece bir saniyeliğine. Ama yumuşaklık kalmak ister gibi çeker onu. Gözlerini kapatır; burada acele etmeden, korkmadan, sadece kendisi olabileceğini hayal eder. İçindeki sıcaklık bedenine yayılır ve bu duygunun etkisine fazla kapılmamak için derin bir nefes alır. Ayağa kalkar, başörtüsünü düzeltir ve o tatlı hissi yanında taşıyarak işine devam eder.',
+  'İpek Çarşaflar': 'Pahalı bir otelde yatağı değiştirirken Cigdem elini serin ipek çarşafların üzerinde gezdirir. Dokunuş beklenmedik şekilde onu heyecanlandırır — kumaş parmaklarının altında canlanır gibidir. Bir an durur ve bu yumuşaklığı gerekenden uzun hissetmesine izin verir. İçinde sessiz bir titreme olur; basit bir hareket düşünceler fırtınası uyandırır. Elini hızla çeker ve kendine utangaç ama gözlerinde bir parıltıyla gülümser.',
+  'Kilitli Kapı': 'Bazı evlerden birinde Cigdem, içeriden kilitlenebilen küçük bir misafir odası bulur. Sadece dış dünyayı geride bırakma hissi için kapıyı kilitler. Burası daha sessiz, daha karanlık ve hava daha yoğun gibidir. Kapıya sırtını yaslar; nadir bir güven ve yalnızlık duygusu hisseder. Bu kapalı odada düşünceleri daha cesur, hayalleri daha canlı olur. Genelde derinlerde sakladığı duygularıyla birkaç an baş başa kalır, sonra kapıyı açıp gerçek hayata döner.',
+  'Lambanın Sıcak Işığı': 'Pahalı bir evin yatak odasında tek bir masa lambası yanar, yumuşak altın bir ışık yayar. Cigdem toz alırken bu ışık onu sarar, sanki bir filmin sahnesindeymiş gibi. Duvarlardaki gölgeler onunla birlikte hareket eder ve kendini gizli bir hikâyenin parçası gibi hisseder. Bu ışığın altında nefesi yavaşlar ve içinde sessiz bir ateş yanar. Lambanın yanında biraz oyalanır, sonra ışığı kapatıp çıkar.',
+  'Yabancı Yatak Odası': 'Başkasının yatak odası Cigdem\'e her zaman gizemli gelir: yatak, düzgün yastıklar, temizlik ve pahalı kokular. Temizlik yaparken düşünceleri uzaklara gider. Ya bu oda onun olsaydı? Ya hayatı başka türlü olabilseydi? Bu hayaller fazlasıyla tatlı, neredeyse tehlikelidir. Yatağın kenarına oturur, gözlerini bir an kapatır ve arzularını saklamak zorunda olmadığı başka bir hayatı hayal eder. Sonra düşüncelerinden korkar gibi hızla ayağa kalkar.',
+  'Kendine Ayrılan Bir An': 'Temizlik bitip her şey parladığında Cigdem birkaç dakika daha yalnız kalır. Bu onun küçük sırrıdır — acele etmeden geçirdiği kısa bir an. Pencere kenarına yaslanır, şehre bakar ve gün boyu içinde yaşayan o sıcak heyecanın hâlâ orada olduğunu hisseder. Gözlerini kapatır; bu duygulara en azından düşüncelerinde dokunmasına izin verir, sonra yeniden sakin maskesini takıp kapıdan çıkar. Yeni bir ev, yeni bir hikâye onu beklemektedir.'
+};
 
 let wheelInitialized = false;
 let isSpinning = false;
 let currentWheelRotation = 0;
+let resultTimeout = null;
 
 function initWheel(){
   if(wheelInitialized) return;
   wheelInitialized = true;
   
-  const wheel = document.getElementById('wheel');
-  if(!wheel) return;
+  // Check if canvas already exists, if not create it
+  let canvas = document.getElementById('wheelCanvas');
+  if(!canvas){
+    const wheel = document.getElementById('wheel');
+    if(!wheel) return;
+    
+    // Create canvas element with responsive sizing
+    canvas = document.createElement('canvas');
+    canvas.id = 'wheelCanvas';
+    canvas.className = 'wheel-canvas';
+    // Set canvas size based on container, will be scaled by CSS
+    const isMobile = window.innerWidth <= 640;
+    const canvasSize = isMobile ? 320 : 340;
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.borderRadius = '50%';
+    canvas.style.transition = 'transform 4s cubic-bezier(0.17,0.67,0.12,0.99)';
+    canvas.style.transformOrigin = 'center center';
+    
+    // Clear existing content and add canvas
+    wheel.innerHTML = '';
+    wheel.appendChild(canvas);
+  }
+  
+  const ctx = canvas.getContext('2d');
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = centerX - 2; // Full radius to edge
+  // Responsive center hub size
+  const isMobile = window.innerWidth <= 640;
+  const centerHubRadius = isMobile ? 20 : 24; // Smaller on mobile
   
   const segmentCount = wheelItems.length;
-  const segmentAngle = 360 / segmentCount;
+  const segmentAngle = (2 * Math.PI) / segmentCount; // Radians
   
-  // Create alternating colors
-  const colors = [
-    'rgba(255,0,100,0.7)',
-    'rgba(0,255,255,0.7)',
-    'rgba(255,0,100,0.7)',
-    'rgba(0,255,255,0.7)',
-    'rgba(255,0,100,0.7)',
-    'rgba(0,255,255,0.7)',
-    'rgba(255,0,100,0.7)',
-    'rgba(0,255,255,0.7)',
-    'rgba(255,0,100,0.7)',
-    'rgba(0,255,255,0.7)',
-    'rgba(255,0,100,0.7)',
-    'rgba(0,255,255,0.7)',
-    'rgba(255,0,100,0.7)',
-    'rgba(0,255,255,0.7)'
-  ];
+  // Clear canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   
-  wheelItems.forEach((item, index) => {
-    const segment = document.createElement('div');
-    segment.className = 'wheel-segment';
+  // Draw segments as radial wedges from center
+  for(let i = 0; i < segmentCount; i++){
+    const startAngle = (i * segmentAngle) - (Math.PI / 2); // Start from top (-90°)
+    const endAngle = startAngle + segmentAngle;
+    const isRed = i % 2 === 0;
     
-    const angle = index * segmentAngle;
-    const rotation = angle - 90; // Start from top
+    // Draw segment wedge from center to edge
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY); // Start at center
+    ctx.arc(centerX, centerY, radius, startAngle, endAngle); // Arc to edge
+    ctx.closePath(); // Close back to center - this creates radial dividing lines
     
-    segment.style.transform = `rotate(${rotation}deg)`;
-    segment.style.background = `linear-gradient(${angle}deg, ${colors[index]}, ${colors[index]}00)`;
-    segment.style.borderRight = '2px solid rgba(0,255,255,0.4)';
-    segment.style.clipPath = 'polygon(0 0, 100% 0, 100% 100%)';
+    // Fill segment
+    ctx.fillStyle = isRed ? '#e60000' : '#ffffff';
+    ctx.fill();
     
-    // Text container to rotate text back to readable position
-    const textContainer = document.createElement('div');
-    textContainer.style.transform = `rotate(${90 - angle}deg)`;
-    textContainer.style.display = 'flex';
-    textContainer.style.flexDirection = 'column';
-    textContainer.style.alignItems = 'flex-start';
-    textContainer.style.justifyContent = 'center';
-    textContainer.style.height = '100%';
-    textContainer.style.paddingLeft = '10px';
+    // Draw segment border (dividing line)
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 1;
+    ctx.stroke();
     
-    const trText = document.createElement('div');
-    trText.className = 'wheel-segment-text tr';
-    trText.textContent = item;
+    // Draw text in segment
+    ctx.save();
+    const textAngle = startAngle + (segmentAngle / 2); // Middle of segment
+    // Move text further from center to give more space
+    const textRadius = centerHubRadius + (radius - centerHubRadius) * 0.55; // Position text
+    const textX = centerX + Math.cos(textAngle) * textRadius;
+    const textY = centerY + Math.sin(textAngle) * textRadius;
     
-    textContainer.appendChild(trText);
-    segment.appendChild(textContainer);
-    wheel.appendChild(segment);
-  });
+    ctx.translate(textX, textY);
+    ctx.rotate(textAngle); // Rotate text to align vertically with radial dividing line (center to edge)
+    
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Responsive font size - increased size
+    const isMobile = window.innerWidth <= 640;
+    const baseFontSize = isMobile ? 12 : 16;
+    
+    ctx.fillStyle = isRed ? '#ffffff' : '#000000';
+    ctx.shadowColor = isRed ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.5)';
+    ctx.shadowBlur = 2;
+    
+    const text = wheelItems[i];
+    // Calculate available space - when text is rotated, we need more width
+    const availableRadius = radius - centerHubRadius;
+    // Increase width significantly - when rotated, text needs more horizontal space
+    const maxTextWidth = availableRadius * 0.85;
+    let fontSize = baseFontSize;
+    
+    // Function to wrap text into multiple lines
+    function wrapText(text, maxWidth, font) {
+      ctx.font = font;
+      const words = text.split(' ');
+      const lines = [];
+      let currentLine = '';
+      
+      for(let i = 0; i < words.length; i++){
+        const word = words[i];
+        const testLine = currentLine ? currentLine + ' ' + word : word;
+        const metrics = ctx.measureText(testLine);
+        
+        // If adding this word exceeds width and we already have content, wrap
+        if(metrics.width > maxWidth && currentLine){
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      }
+      // Add the last line
+      if(currentLine) lines.push(currentLine);
+      return lines;
+    }
+    
+    // Try wrapping with base font size
+    ctx.font = `bold ${fontSize}px -apple-system, sans-serif`;
+    let lines = wrapText(text, maxTextWidth, ctx.font);
+    const lineHeight = fontSize * 1.15;
+    const maxHeight = availableRadius * 1.8;
+    
+    // Adjust font size if needed to fit vertically
+    let totalHeight = (lines.length - 1) * lineHeight;
+    while(totalHeight > maxHeight && fontSize > (isMobile ? 10 : 12)){
+      fontSize = Math.max(isMobile ? 10 : 12, fontSize - 1);
+      ctx.font = `bold ${fontSize}px -apple-system, sans-serif`;
+      lines = wrapText(text, maxTextWidth, ctx.font);
+      const adjustedLineHeight = fontSize * 1.15;
+      totalHeight = (lines.length - 1) * adjustedLineHeight;
+    }
+    
+    // Calculate vertical centering
+    const finalLineHeight = fontSize * 1.15;
+    const finalTotalHeight = (lines.length - 1) * finalLineHeight;
+    const startY = -(finalTotalHeight / 2);
+    
+    // Draw each line - draw complete text without any width restriction
+    lines.forEach((line, lineIndex) => {
+      const y = startY + (lineIndex * finalLineHeight);
+      // Draw without maxWidth to ensure no truncation occurs
+      ctx.fillText(line, 0, y);
+    });
+    
+    ctx.restore();
+  }
+  
+  // Draw center hub circle
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, centerHubRadius, 0, 2 * Math.PI);
+  ctx.fillStyle = '#e60000';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
 }
 
 function spinWheel(){
   if(isSpinning) return;
   
-  const wheel = document.getElementById('wheel');
+  const canvas = document.getElementById('wheelCanvas');
+  const wheel = canvas ? canvas.parentElement : document.getElementById('wheel');
   const spinBtn = document.getElementById('spinBtn');
   const resultDiv = document.getElementById('wheelResult');
   
-  if(!wheel || !spinBtn) return;
+  if((!canvas && !wheel) || !spinBtn) return;
   
   isSpinning = true;
   spinBtn.disabled = true;
-  wheel.classList.add('wheel-spinning');
+  if(canvas) canvas.classList.add('wheel-spinning');
+  if(wheel && !canvas) wheel.classList.add('wheel-spinning');
   
   if(resultDiv){
     resultDiv.classList.remove('show');
   }
   
-  // Random spin: 3-5 full rotations + random segment
   const segmentCount = wheelItems.length;
   const segmentAngle = 360 / segmentCount;
   const randomSegment = Math.floor(Math.random() * segmentCount);
   const fullRotations = 3 + Math.random() * 2; // 3-5 rotations
-  // Calculate target angle: full rotations + position segment at top (arrow position)
-  // Arrow points to top (0°), so we need to rotate so the selected segment is at top
-  const targetSegmentAngle = randomSegment * segmentAngle;
-  const targetRotation = fullRotations * 360 + (360 - targetSegmentAngle);
+  
+  const segmentStartAngle = randomSegment * segmentAngle - 90;
+  const segmentCenterAngle = segmentStartAngle + segmentAngle / 2;
+  // Rotate so segment center aligns with top (0°)
+  const targetRotation = fullRotations * 360 + (360 - segmentCenterAngle);
   
   // Update current rotation
   currentWheelRotation += targetRotation;
   
-  wheel.style.transform = `rotate(${currentWheelRotation}deg)`;
+  if(canvas) canvas.style.transform = `rotate(${currentWheelRotation}deg)`;
+  if(wheel && !canvas) wheel.style.transform = `rotate(${currentWheelRotation}deg)`;
   
-  // Show result after animation
+  // Show result after animation completes
+  const spinDuration = 4000 + Math.random() * 1000; // 4-5 seconds
   setTimeout(() => {
-    const selectedItem = wheelItems[randomSegment];
+   
+    const normalizedRotation = ((currentWheelRotation % 360) + 360) % 360;
+    let angleFromTop =360- (normalizedRotation ) % 360;
+    let segmentIndex = Math.floor(angleFromTop / segmentAngle);
+    segmentIndex = segmentIndex % segmentCount;
+    if(segmentIndex < 0) segmentIndex += segmentCount;
+    
+    
+    const selectedItem = wheelItems[segmentIndex];
+    const selectedStory = wheelStories[selectedItem] || selectedItem;
     
     if(resultDiv){
       const trText = document.getElementById('resultTextTR');
       
-      if(trText) trText.textContent = selectedItem;
+      if(trText) {
+        const isMobile = window.innerWidth <= 640;
+        const titleSize = isMobile ? '16px' : '20px';
+        const storySize = isMobile ? '12px' : '14px';
+        const titleMargin = isMobile ? '10px' : '15px';
+        trText.innerHTML = '<div style="font-size:' + titleSize + ';font-weight:bold;margin-bottom:' + titleMargin + ';color:#e60000;text-shadow:0 0 10px rgba(230,0,0,0.6)">' + selectedItem + '</div><div style="font-size:' + storySize + ';line-height:1.5;opacity:0.9;margin-top:8px">' + selectedStory + '</div>';
+      }
+      
+      // Show backdrop
+      const backdrop = document.getElementById('wheelResultBackdrop');
+      if(backdrop) backdrop.classList.add('show');
       
       resultDiv.classList.add('show');
+      
+      // Auto-close after 15 seconds
+      if(resultTimeout) clearTimeout(resultTimeout);
+      resultTimeout = setTimeout(() => {
+        closeWheelResult();
+      }, 15000);
     }
     
     isSpinning = false;
     spinBtn.disabled = false;
-    wheel.classList.remove('wheel-spinning');
+    if(canvas) canvas.classList.remove('wheel-spinning');
+    if(wheel && !canvas) wheel.classList.remove('wheel-spinning');
   }, 4000);
 }
 
 function closeWheelResult(){
   const resultDiv = document.getElementById('wheelResult');
+  const backdrop = document.getElementById('wheelResultBackdrop');
+  
   if(resultDiv){
     resultDiv.classList.remove('show');
+  }
+  if(backdrop){
+    backdrop.classList.remove('show');
+  }
+  
+  // Clear the auto-close timeout if it exists
+  if(resultTimeout){
+    clearTimeout(resultTimeout);
+    resultTimeout = null;
   }
 }
 
 </script>
 </body>
 </html>
+
 
 
 

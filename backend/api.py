@@ -173,16 +173,21 @@ def serve_image(filename):
 
 
 def is_admin_user(user_id):
-    """Check if a user is admin by comparing their username with ADMIN_USERNAME"""
-    admin_username = os.getenv("ADMIN_USERNAME", "").lower()
-    if not admin_username:
+    """Check if a user is admin by comparing their username with ADMIN_USERNAME (supports comma-separated list)"""
+    admin_usernames_str = os.getenv("ADMIN_USERNAME", "")
+    if not admin_usernames_str:
+        return False
+    
+    # Split by comma and create a set of lowercase admin usernames
+    admin_usernames = {name.strip().lower() for name in admin_usernames_str.split(",") if name.strip()}
+    if not admin_usernames:
         return False
     
     try:
         track = db.user_track.find_one({"telegram_id": user_id})
         if track:
             username = track.get("username", "").lower()
-            return username == admin_username
+            return username in admin_usernames
     except Exception:
         pass
     return False
