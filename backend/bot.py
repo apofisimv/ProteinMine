@@ -48,8 +48,8 @@ async def send_message_to_user(user_id: int, text: str, photo_url: str = None):
 
 user_data = {}
 MAX_ENERGY = 50
-# Energy regenerates 1 point every 72 seconds = full recovery in 1 hour (3600 seconds / 50 energy)
-ENERGY_REGEN_TIME = 72
+# Energy regenerates 1 point every 1 second = full recovery in 50 seconds (50 energy / 1 second)
+ENERGY_REGEN_TIME = 1
 BOOST_COST = 100
 BOOST_DURATION = 600
 BOOST_MULTIPLIER = 2

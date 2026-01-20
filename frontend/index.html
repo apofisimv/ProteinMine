@@ -533,13 +533,7 @@ async function mine(){
   btn.classList.add('clicked');
   setTimeout(() => btn.classList.remove('clicked'), 600);
   
-  // Check energy first and show notification if needed
-  if(d.energy <= 0){
-    const rect = btn.getBoundingClientRect();
-    createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, '⚡');
-    showNotification('⚡ Arzun yok!\n\nLütfen arkadaşlarını davet et veya birkaç dakika bekle...');
-    return;
-  }
+  // Removed energy check - users can now click forever!
   
   if(!userId){
     showNotification('⚠️ Telegram kullanıcı ID bulunamadı');

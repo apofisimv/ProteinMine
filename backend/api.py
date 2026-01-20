@@ -21,8 +21,8 @@ FRONTEND_DIR = os.path.join(ROOT_DIR, "frontend")
 load_dotenv(os.path.join(ROOT_DIR, ".env"))
 
 MAX_ENERGY = 50
-# Energy regenerates 1 point every 72 seconds = full recovery in 1 hour (3600 seconds / 50 energy)
-ENERGY_REGEN_TIME = 72
+# Energy regenerates 1 point every 1 second = full recovery in 50 seconds (50 energy / 1 second)
+ENERGY_REGEN_TIME = 1
 
 # Database is initialized in db.py
 
